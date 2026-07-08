@@ -91,19 +91,44 @@ export default function HomePage() {
 
         {/* Social Proof */}
         <div className="flex items-center justify-center gap-8 text-sm text-slate-600 flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="flex -space-x-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-2 border-white"></div>
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 border-2 border-white"></div>
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-2 border-white"></div>
+          <div className="flex items-center gap-3">
+            <div className="flex -space-x-3">
+              <div className="w-10 h-10 rounded-full border-2 border-white shadow-md overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop" 
+                  alt="Creator" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="w-10 h-10 rounded-full border-2 border-white shadow-md overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" 
+                  alt="Creator" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="w-10 h-10 rounded-full border-2 border-white shadow-md overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=100&h=100&fit=crop" 
+                  alt="Creator" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="w-10 h-10 rounded-full border-2 border-white shadow-md overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop" 
+                  alt="Creator" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
-            <span className="font-semibold">10,000+ users</span>
+            <span className="font-semibold text-slate-700">10,000+ users</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             {[...Array(5)].map((_, i) => (
-              <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+              <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
             ))}
-            <span className="ml-1 font-semibold">4.9/5 rating</span>
+            <span className="ml-1 font-semibold text-slate-700">4.9/5 rating</span>
           </div>
         </div>
       </section>

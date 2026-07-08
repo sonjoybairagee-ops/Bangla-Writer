@@ -5,8 +5,10 @@ import { PRICING_PLANS } from '@/lib/constants/pricing';
 import { formatDate } from '@/lib/utils';
 import {
   Check, Crown, Zap, Sparkles, Shield,
-  Clock, RefreshCcw, Wallet, Star
+  Clock, RefreshCcw, Wallet, Star, Gift, Copy
 } from 'lucide-react';
+import { BkashPaymentModal } from '@/components/payment/bkash-payment-modal';
+import { copyToClipboard } from '@/lib/utils/clipboard';
 
 // ─── Yearly 20% discount helpers ─────────────────────────────────────────────
 const YEARLY_DISCOUNT = 0.20;
@@ -59,8 +61,18 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState<string | null>(null);
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
+  const [bkashModal, setBkashModal] = useState<{
+    isOpen: boolean;
+    planId: string;
+    planName: string;
+    amount: number;
+  } | null>(null);
+  const [referralData, setReferralData] = useState<any>(null);
 
-  useEffect(() => { fetchUsage(); }, []);
+  useEffect(() => { 
+    fetchUsage();
+    fetchReferralData();
+  }, []);
 
   const fetchUsage = async () => {
     try {
@@ -73,24 +85,42 @@ export default function BillingPage() {
     }
   };
 
+  const fetchReferralData = async () => {
+    try {
+      const res = await fetch('/api/referral/my-code');
+      const data = await res.json();
+      setReferralData(data);
+    } catch (error) {
+      console.error('Failed to fetch referral data:', error);
+    }
+  };
+
+  const handleCopyReferral = () => {
+    if (referralData?.referralUrl) {
+      copyToClipboard(
+        referralData.referralUrl, 
+        '🎁 Referral link copied! Share it to earn free months'
+      );
+    }
+  };
+
   const handleUpgrade = async (planId: string) => {
     setCheckingOut(planId);
     
     try {
-      // For now, show a message about payment setup
-      // TODO: Integrate with actual payment gateway (SSLCommerz/bKash)
+      const plan = PRICING_PLANS[planId as keyof typeof PRICING_PLANS];
+      const monthlyPrice = plan.prices.BDT;
+      const amount = billing === 'yearly' 
+        ? getYearlyTotal(monthlyPrice)
+        : monthlyPrice;
       
-      alert(`Plan upgrade feature coming soon!\n\nYou selected: ${PRICING_PLANS[planId as keyof typeof PRICING_PLANS].name}\nPrice: ৳${billing === 'monthly' ? PRICING_PLANS[planId as keyof typeof PRICING_PLANS].prices.BDT : getYearlyMonthly(PRICING_PLANS[planId as keyof typeof PRICING_PLANS].prices.BDT)}/month\n\nPayment integration with bKash/SSLCommerz will be added soon.`);
-      
-      /* PAYMENT INTEGRATION - TO BE IMPLEMENTED
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId, billing }),
+      // Open bKash payment modal
+      setBkashModal({
+        isOpen: true,
+        planId,
+        planName: plan.name,
+        amount,
       });
-      const data = await res.json();
-      if (data.checkoutUrl) window.location.href = data.checkoutUrl;
-      */
     } catch (error) {
       alert('Failed to start checkout. Please try again.');
       console.error('Checkout error:', error);
@@ -119,13 +149,13 @@ export default function BillingPage() {
       <div className="text-center space-y-3 pt-4">
         <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm font-semibold px-4 py-1.5 rounded-full">
           <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-          Bangla Writer প্রাইমিং
+          Bangla Writer Pricing
         </div>
         <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
-          আপনার জন্য পারফেক্ট প্ল্যানটি বেছে নিন
+          Choose Your Perfect Plan
         </h1>
         <p className="text-slate-500 text-base max-w-lg mx-auto">
-          তিনটি জেনারেশন ট্রাই করুন। ভালো লাগলে নিচের প্ল্যান থেকে বেছে নিন।
+          Try 3 generations. Choose a plan if you like it.
         </p>
       </div>
 
@@ -162,7 +192,7 @@ export default function BillingPage() {
 
       {/* ── Pricing Grid ── */}
       <div className="grid md:grid-cols-3 gap-6 px-2">
-        {Object.entries(PRICING_PLANS).map(([planId, plan]) => {
+        {Object.entries(PRICING_PLANS).filter(([id]) => id !== 'free').map(([planId, plan]) => {
           const style = PLAN_STYLE[planId];
           const Icon = style.icon;
           const isCurrent = planId === currentPlan;
@@ -302,6 +332,138 @@ export default function BillingPage() {
         ))}
       </div>
 
+      {/* ── Referral Card ── */}
+      {referralData && (
+        <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 border-2 border-purple-200 rounded-2xl p-8 px-2 relative overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-200 rounded-full blur-3xl opacity-30" />
+          <div className="absolute bottom-0 left-0 w-40 h-40 bg-pink-200 rounded-full blur-3xl opacity-30" />
+          
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                    <Gift className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-900">Refer & Earn</h2>
+                </div>
+                <p className="text-slate-600">
+                  Invite creators and unlock <span className="font-bold text-purple-600">free months</span> when they subscribe!
+                </p>
+              </div>
+            </div>
+
+            {/* Referral Code & Link */}
+            <div className="grid md:grid-cols-2 gap-4 mb-6">
+              <div className="bg-white/80 backdrop-blur-sm border border-purple-200 rounded-xl p-4">
+                <div className="text-xs text-slate-500 mb-1 uppercase tracking-wide">Your Referral Code</div>
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold text-purple-600 tracking-wider">
+                    {referralData.referralCode}
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(referralData.referralCode, 'Code copied!')}
+                    className="p-2 hover:bg-purple-100 rounded-lg transition-colors"
+                  >
+                    <Copy className="w-4 h-4 text-purple-600" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-white/80 backdrop-blur-sm border border-purple-200 rounded-xl p-4">
+                <div className="text-xs text-slate-500 mb-1 uppercase tracking-wide">Referral Link</div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-sm text-slate-700 truncate flex-1">
+                    {referralData.referralUrl}
+                  </div>
+                  <button
+                    onClick={handleCopyReferral}
+                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white text-sm font-semibold rounded-lg hover:from-purple-700 hover:to-pink-600 transition-all flex items-center gap-2 flex-shrink-0"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copy Link
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Progress to Next Reward */}
+            <div className="bg-white/80 backdrop-blur-sm border border-purple-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <div className="text-sm font-semibold text-slate-700">Progress to Next Reward</div>
+                  <div className="text-xs text-slate-500">
+                    {referralData.stats?.paidReferrals || 0} paid referrals
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {referralData.stats?.paidReferrals || 0}/3
+                  </div>
+                  <div className="text-xs text-slate-500">to 14 Days Free</div>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="relative w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500 rounded-full"
+                  style={{ width: `${Math.min(((referralData.stats?.paidReferrals || 0) / 3) * 100, 100)}%` }}
+                />
+              </div>
+
+              {/* Milestone badges */}
+              <div className="grid grid-cols-5 gap-2 mt-5">
+                {[
+                  { count: 1, reward: 'Progress', icon: '📊' },
+                  { count: 3, reward: '14 Days', icon: '🎯' },
+                  { count: 5, reward: '1 Month', icon: '🎉' },
+                  { count: 10, reward: '2 Months', icon: '🏆' },
+                  { count: 25, reward: '20% Forever', icon: '⭐' },
+                ].map(({ count, reward, icon }) => {
+                  const achieved = (referralData.stats?.paidReferrals || 0) >= count;
+                  return (
+                    <div
+                      key={count}
+                      className={`text-center p-3 rounded-lg transition-all ${
+                        achieved
+                          ? 'bg-gradient-to-br from-purple-100 to-pink-100 border-2 border-purple-300'
+                          : 'bg-white border border-slate-200'
+                      }`}
+                    >
+                      <div className="text-2xl mb-1">{icon}</div>
+                      <div className={`text-xs font-bold ${achieved ? 'text-purple-600' : 'text-slate-400'}`}>
+                        {count}
+                      </div>
+                      <div className={`text-xs ${achieved ? 'text-slate-700' : 'text-slate-400'}`}>
+                        {reward}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Rewards Info */}
+            <div className="mt-5 grid md:grid-cols-3 gap-3">
+              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 text-center border border-purple-100">
+                <div className="text-lg font-bold text-slate-900">{referralData.stats?.totalReferrals || 0}</div>
+                <div className="text-xs text-slate-500">Total Signups</div>
+              </div>
+              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 text-center border border-purple-100">
+                <div className="text-lg font-bold text-purple-600">{referralData.stats?.paidReferrals || 0}</div>
+                <div className="text-xs text-slate-500">Paid Referrals</div>
+              </div>
+              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 text-center border border-purple-100">
+                <div className="text-lg font-bold text-green-600">{referralData.stats?.rewardsEarned || 0}</div>
+                <div className="text-xs text-slate-500">Rewards Earned</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Current Subscription Card ── */}
       {usage?.subscription && (
         <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-6 px-2">
@@ -321,47 +483,18 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* ── Usage This Month ── */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-        <h2 className="text-lg font-bold text-slate-900 mb-5">This Month's Usage</h2>
-        <div className="space-y-4">
-          <UsageBar label="Scripts / Generation"  current={usage?.usage.scriptsGenerated || 0}  limit={usage?.limits.scripts_per_month || 0} />
-          <UsageBar label="Hooks Generated"          current={usage?.usage.hooksGenerated || 0}    limit={usage?.limits.hooks_per_month || 0} />
-          <UsageBar label="Content Plans"        current={usage?.usage.contentPlansCreated || 0} limit={usage?.limits.content_plans || 0} />
-          <UsageBar label="OVC Scenes"                 current={usage?.usage.ovcScenesGenerated || 0} limit={usage?.limits.ovc_scenes || 0} />
-        </div>
-      </div>
-
-    </div>
-  );
-}
-
-// ─── UsageBar ─────────────────────────────────────────────────────────────────
-function UsageBar({ label, current, limit }: { label: string; current: number; limit: number }) {
-  const unlimited = limit === -1;
-  const pct = unlimited ? 100 : Math.min((current / limit) * 100, 100);
-  const warn = !unlimited && pct >= 80;
-
-  return (
-    <div>
-      <div className="flex items-center justify-between text-sm mb-2">
-        <span className="font-medium text-slate-700">{label}</span>
-        <span className={`text-xs font-semibold ${warn ? 'text-red-500' : 'text-slate-500'}`}>
-          {current} / {unlimited ? '∞' : limit}
-        </span>
-      </div>
-      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-500 ${
-            unlimited
-              ? 'w-full bg-gradient-to-r from-purple-300 to-pink-300'
-              : warn
-              ? 'bg-red-400'
-              : 'bg-gradient-to-r from-purple-500 to-pink-400'
-          }`}
-          style={unlimited ? {} : { width: `${pct}%` }}
+      {/* bKash Payment Modal */}
+      {bkashModal && (
+        <BkashPaymentModal
+          isOpen={bkashModal.isOpen}
+          onClose={() => setBkashModal(null)}
+          planId={bkashModal.planId}
+          planName={bkashModal.planName}
+          amount={bkashModal.amount}
+          billing={billing}
         />
-      </div>
+      )}
+
     </div>
   );
 }

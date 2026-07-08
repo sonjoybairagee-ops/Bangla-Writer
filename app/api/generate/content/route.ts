@@ -5,7 +5,8 @@ import { prisma } from '@/lib/prisma';
 import { generateJSON } from '@/lib/ai/openai';
 import { createContentWriterPrompt } from '@/lib/ai/prompts/content-writer';
 import { createBrandVoicePrompt } from '@/lib/ai/prompts/brand-extractor';
-import { canGenerateScript } from '@/lib/constants/pricing';
+import { checkUsageLimit, incrementUsage } from '@/lib/utils/usage-limits';
+import { useBonusGeneration } from '@/lib/utils/referral';
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,31 +31,18 @@ export async function POST(req: NextRequest) {
     } = body;
 
     // Check usage limits
-    const subscription = await prisma.subscription.findFirst({
-      where: {
-        userId: session.user.id,
-        status: 'active',
-      },
-    });
-
-    const planId = subscription?.planId || 'starter';
-
-    const currentDate = new Date();
-    const usage = await prisma.usage.findUnique({
-      where: {
-        userId_month_year: {
-          userId: session.user.id,
-          month: currentDate.getMonth() + 1,
-          year: currentDate.getFullYear(),
-        },
-      },
-    });
-
-    if (usage && !canGenerateScript(usage, planId)) {
-      return NextResponse.json(
-        { error: 'Monthly script limit reached. Upgrade your plan.' },
-        { status: 403 }
-      );
+    const usageCheck = await checkUsageLimit(session.user.id, 'script');
+    
+    if (!usageCheck.allowed) {
+      // Try to use bonus generation from referral rewards
+      const usedBonus = await useBonusGeneration(session.user.id, 'script');
+      
+      if (!usedBonus) {
+        return NextResponse.json(
+          { error: usageCheck.message || 'Monthly limit reached. Upgrade your plan.' },
+          { status: 403 }
+        );
+      }
     }
 
     // Get brand voice if brandId provided
@@ -117,34 +105,18 @@ export async function POST(req: NextRequest) {
           viralScore: generatedContent.viralScore || null,
         },
       });
+    }
 
-      // Update usage
-      await prisma.usage.upsert({
-        where: {
-          userId_month_year: {
-            userId: session.user.id,
-            month: currentDate.getMonth() + 1,
-            year: currentDate.getFullYear(),
-          },
-        },
-        update: {
-          scriptsGenerated: {
-            increment: 1,
-          },
-        },
-        create: {
-          userId: session.user.id,
-          month: currentDate.getMonth() + 1,
-          year: currentDate.getFullYear(),
-          scriptsGenerated: 1,
-        },
-      });
+    // Increment usage (if not using bonus)
+    if (usageCheck.allowed) {
+      await incrementUsage(session.user.id, 'script');
     }
 
     return NextResponse.json({
       success: true,
       content: generatedContent,
       scriptId: script?.id,
+      usedBonus: !usageCheck.allowed,
     });
   } catch (error) {
     console.error('Content generation error:', error);

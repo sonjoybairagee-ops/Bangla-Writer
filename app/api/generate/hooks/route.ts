@@ -4,7 +4,8 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { generateJSON } from '@/lib/ai/openai';
 import { createHookGeneratorPrompt } from '@/lib/ai/prompts/content-writer';
-import { canGenerateHook } from '@/lib/constants/pricing';
+import { checkUsageLimit, incrementUsage } from '@/lib/utils/usage-limits';
+import { useBonusGeneration } from '@/lib/utils/referral';
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,31 +19,18 @@ export async function POST(req: NextRequest) {
     const { topic, platform, audience, hookType, language = 'bangla', count = 10 } = body;
 
     // Check usage limits
-    const subscription = await prisma.subscription.findFirst({
-      where: {
-        userId: session.user.id,
-        status: 'active',
-      },
-    });
-
-    const planId = subscription?.planId || 'starter';
-
-    const currentDate = new Date();
-    const usage = await prisma.usage.findUnique({
-      where: {
-        userId_month_year: {
-          userId: session.user.id,
-          month: currentDate.getMonth() + 1,
-          year: currentDate.getFullYear(),
-        },
-      },
-    });
-
-    if (usage && !canGenerateHook(usage, planId)) {
-      return NextResponse.json(
-        { error: 'Monthly hook limit reached. Upgrade your plan.' },
-        { status: 403 }
-      );
+    const usageCheck = await checkUsageLimit(session.user.id, 'hook');
+    
+    if (!usageCheck.allowed) {
+      // Try to use bonus generation from referral rewards
+      const usedBonus = await useBonusGeneration(session.user.id, 'hook');
+      
+      if (!usedBonus) {
+        return NextResponse.json(
+          { error: usageCheck.message || 'Monthly limit reached' },
+          { status: 403 }
+        );
+      }
     }
 
     // Generate hooks
@@ -69,22 +57,28 @@ export async function POST(req: NextRequest) {
           year: currentDate.getFullYear(),
         },
       },
-      update: {
-        hooksGenerated: {
-          increment: count,
-        },
-      },
       create: {
         userId: session.user.id,
         month: currentDate.getMonth() + 1,
         year: currentDate.getFullYear(),
-        hooksGenerated: count,
+        hooksGenerated: 1,
+      },
+      update: {
+        hooksGenerated: {
+          increment: 1,
+        },
       },
     });
+
+    // Increment usage (if not using bonus)
+    if (usageCheck.allowed) {
+      await incrementUsage(session.user.id, 'hook');
+    }
 
     return NextResponse.json({
       success: true,
       hooks: generatedHooks.hooks,
+      usedBonus: !usageCheck.allowed, // Let user know if bonus was used
     });
   } catch (error) {
     console.error('Hook generation error:', error);

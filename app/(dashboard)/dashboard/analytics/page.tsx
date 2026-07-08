@@ -19,6 +19,20 @@ import {
   ArrowDown,
   Filter,
 } from 'lucide-react';
+import { 
+  LineChart, 
+  Line, 
+  AreaChart, 
+  Area, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  Legend 
+} from 'recharts';
 import { ContentPerformanceTracker } from '@/components/analytics/content-performance-tracker';
 import { ViralScorePredictor } from '@/components/analytics/viral-score-predictor';
 
@@ -35,13 +49,52 @@ export default function AnalyticsPage() {
     try {
       const response = await fetch(`/api/analytics/overview?range=${dateRange}`);
       const data = await response.json();
-      setMetrics(data.metrics);
+      setMetrics(data.metrics || {
+        totalViews: 0,
+        totalEngagement: 0,
+        totalFollowers: 0,
+        avgViralScore: 0,
+        viewsChange: 0,
+        engagementChange: 0,
+        followersChange: 0,
+        viralScoreChange: 0,
+      });
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
+      // Set empty metrics on error
+      setMetrics({
+        totalViews: 0,
+        totalEngagement: 0,
+        totalFollowers: 0,
+        avgViralScore: 0,
+        viewsChange: 0,
+        engagementChange: 0,
+        followersChange: 0,
+        viralScoreChange: 0,
+      });
     } finally {
       setLoading(false);
     }
   };
+
+  // Generate realistic engagement data based on date range
+  const generateEngagementData = () => {
+    const days = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90;
+    const data = [];
+    for (let i = days; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      data.push({
+        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        views: 0,
+        engagement: 0,
+        followers: 0,
+      });
+    }
+    return data;
+  };
+
+  const engagementData = generateEngagementData();
 
   if (loading) {
     return (
@@ -114,16 +167,18 @@ export default function AnalyticsPage() {
                 <div className="p-3 bg-blue-50 rounded-lg">
                   <Eye className="h-6 w-6 text-blue-600" />
                 </div>
-                <Badge variant="secondary" className="bg-green-50 text-green-700">
-                  <ArrowUp className="h-3 w-3 mr-1" />
-                  12.5%
-                </Badge>
+                {metrics?.viewsChange !== 0 && (
+                  <Badge variant="secondary" className={metrics?.viewsChange > 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}>
+                    {metrics?.viewsChange > 0 ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
+                    {Math.abs(metrics?.viewsChange || 0).toFixed(1)}%
+                  </Badge>
+                )}
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Total Views</p>
-                <p className="text-3xl font-bold">245.8K</p>
+                <p className="text-3xl font-bold">{metrics?.totalViews?.toLocaleString() || '0'}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  +27.3K from last period
+                  {metrics?.totalViews > 0 ? 'from last period' : 'No data yet'}
                 </p>
               </div>
             </CardContent>
@@ -136,16 +191,18 @@ export default function AnalyticsPage() {
                 <div className="p-3 bg-purple-50 rounded-lg">
                   <Heart className="h-6 w-6 text-purple-600" />
                 </div>
-                <Badge variant="secondary" className="bg-green-50 text-green-700">
-                  <ArrowUp className="h-3 w-3 mr-1" />
-                  8.2%
-                </Badge>
+                {metrics?.engagementChange !== 0 && (
+                  <Badge variant="secondary" className={metrics?.engagementChange > 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}>
+                    {metrics?.engagementChange > 0 ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
+                    {Math.abs(metrics?.engagementChange || 0).toFixed(1)}%
+                  </Badge>
+                )}
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Engagement Rate</p>
-                <p className="text-3xl font-bold">4.8%</p>
+                <p className="text-3xl font-bold">{metrics?.totalEngagement?.toFixed(1) || '0'}%</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Above industry avg (3.2%)
+                  {metrics?.totalEngagement > 0 ? 'Average engagement' : 'No data yet'}
                 </p>
               </div>
             </CardContent>
@@ -158,16 +215,18 @@ export default function AnalyticsPage() {
                 <div className="p-3 bg-green-50 rounded-lg">
                   <Users className="h-6 w-6 text-green-600" />
                 </div>
-                <Badge variant="secondary" className="bg-green-50 text-green-700">
-                  <ArrowUp className="h-3 w-3 mr-1" />
-                  15.1%
-                </Badge>
+                {metrics?.followersChange !== 0 && (
+                  <Badge variant="secondary" className={metrics?.followersChange > 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}>
+                    {metrics?.followersChange > 0 ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
+                    {Math.abs(metrics?.followersChange || 0).toFixed(1)}%
+                  </Badge>
+                )}
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Total Followers</p>
-                <p className="text-3xl font-bold">42.5K</p>
+                <p className="text-3xl font-bold">{metrics?.totalFollowers?.toLocaleString() || '0'}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  +5.5K new followers
+                  {metrics?.totalFollowers > 0 ? 'Total audience reach' : 'No data yet'}
                 </p>
               </div>
             </CardContent>
@@ -180,16 +239,18 @@ export default function AnalyticsPage() {
                 <div className="p-3 bg-orange-50 rounded-lg">
                   <Zap className="h-6 w-6 text-orange-600" />
                 </div>
-                <Badge variant="secondary" className="bg-green-50 text-green-700">
-                  <ArrowUp className="h-3 w-3 mr-1" />
-                  5.3%
-                </Badge>
+                {metrics?.viralScoreChange !== 0 && (
+                  <Badge variant="secondary" className={metrics?.viralScoreChange > 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}>
+                    {metrics?.viralScoreChange > 0 ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
+                    {Math.abs(metrics?.viralScoreChange || 0).toFixed(1)}%
+                  </Badge>
+                )}
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Avg Viral Score</p>
-                <p className="text-3xl font-bold">76/100</p>
+                <p className="text-3xl font-bold">{metrics?.avgViralScore || '0'}/100</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  High viral potential
+                  {metrics?.avgViralScore > 70 ? 'High viral potential' : metrics?.avgViralScore > 0 ? 'Moderate potential' : 'No data yet'}
                 </p>
               </div>
             </CardContent>
@@ -207,15 +268,68 @@ export default function AnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-64 flex items-center justify-center bg-slate-50 rounded-lg">
-                <div className="text-center">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Chart will render here</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    (Recharts integration in progress)
-                  </p>
+              {engagementData.some(d => d.views > 0 || d.engagement > 0) ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <AreaChart data={engagementData}>
+                    <defs>
+                      <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorEngagement" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="#94a3b8"
+                      fontSize={12}
+                      tickLine={false}
+                    />
+                    <YAxis 
+                      stroke="#94a3b8"
+                      fontSize={12}
+                      tickLine={false}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#fff', 
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="views" 
+                      stroke="#8b5cf6" 
+                      fillOpacity={1} 
+                      fill="url(#colorViews)"
+                      name="Views"
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="engagement" 
+                      stroke="#06b6d4" 
+                      fillOpacity={1} 
+                      fill="url(#colorEngagement)"
+                      name="Engagement"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-64 flex items-center justify-center bg-slate-50 rounded-lg">
+                  <div className="text-center">
+                    <BarChart3 className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                    <p className="text-sm font-medium text-muted-foreground">No engagement data yet</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Start creating content to see analytics
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -229,25 +343,11 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {[
-                  { name: 'Instagram', views: '98.5K', color: 'bg-pink-500', percentage: 40 },
-                  { name: 'TikTok', views: '87.2K', color: 'bg-black', percentage: 35 },
-                  { name: 'Facebook', views: '45.3K', color: 'bg-blue-600', percentage: 18 },
-                  { name: 'LinkedIn', views: '14.8K', color: 'bg-blue-700', percentage: 7 },
-                ].map((platform, i) => (
-                  <div key={i} className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">{platform.name}</span>
-                      <span className="text-muted-foreground">{platform.views}</span>
-                    </div>
-                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${platform.color}`}
-                        style={{ width: `${platform.percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                <div className="text-center py-8 text-sm text-muted-foreground bg-slate-50 rounded-lg">
+                  <Users className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
+                  <p className="font-medium">No platform data available</p>
+                  <p className="text-xs mt-1">Connect your social media accounts</p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -264,35 +364,10 @@ export default function AnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {[
-                  { title: '5 Tips for Growing Your Business', views: '45.2K', engagement: '8.5%', type: 'Reel' },
-                  { title: 'Behind the Scenes: Product Launch', views: '38.7K', engagement: '7.2%', type: 'Story' },
-                  { title: 'Customer Success Story', views: '32.1K', engagement: '6.8%', type: 'Post' },
-                  { title: 'How-To Tutorial: Step by Step', views: '28.9K', engagement: '5.9%', type: 'Carousel' },
-                ].map((content, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-sm">{content.title}</h4>
-                        <Badge variant="secondary" className="text-xs">{content.type}</Badge>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          {content.views}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Heart className="h-3 w-3" />
-                          {content.engagement}
-                        </span>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      View Details
-                    </Button>
-                  </div>
-                ))}
+              <div className="text-center py-12 text-sm text-muted-foreground">
+                <TrendingUp className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                <p className="font-medium">No content data available</p>
+                <p className="text-xs mt-1">Create content to see performance analytics</p>
               </div>
             </CardContent>
           </Card>

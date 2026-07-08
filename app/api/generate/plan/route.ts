@@ -4,7 +4,8 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { generateJSON } from '@/lib/ai/openai';
 import { createContentPlanPrompt } from '@/lib/ai/prompts/content-writer';
-import { canCreateContentPlan } from '@/lib/constants/pricing';
+import { checkUsageLimit, incrementUsage } from '@/lib/utils/usage-limits';
+import { useBonusGeneration } from '@/lib/utils/referral';
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,31 +31,18 @@ export async function POST(req: NextRequest) {
     } = body;
 
     // Check usage limits
-    const subscription = await prisma.subscription.findFirst({
-      where: {
-        userId: session.user.id,
-        status: 'active',
-      },
-    });
-
-    const planId = subscription?.planId || 'starter';
-
-    const currentDate = new Date();
-    const usage = await prisma.usage.findUnique({
-      where: {
-        userId_month_year: {
-          userId: session.user.id,
-          month: currentDate.getMonth() + 1,
-          year: currentDate.getFullYear(),
-        },
-      },
-    });
-
-    if (usage && !canCreateContentPlan(usage, planId)) {
-      return NextResponse.json(
-        { error: 'Monthly content plan limit reached. Upgrade your plan.' },
-        { status: 403 }
-      );
+    const usageCheck = await checkUsageLimit(session.user.id, 'plan');
+    
+    if (!usageCheck.allowed) {
+      // Try to use bonus generation from referral rewards
+      const usedBonus = await useBonusGeneration(session.user.id, 'plan');
+      
+      if (!usedBonus) {
+        return NextResponse.json(
+          { error: usageCheck.message || 'Monthly limit reached. Upgrade your plan.' },
+          { status: 403 }
+        );
+      }
     }
 
     // Generate content plan
@@ -110,18 +98,18 @@ export async function POST(req: NextRequest) {
           increment: 1,
         },
       },
-      create: {
-        userId: session.user.id,
-        month: currentDate.getMonth() + 1,
-        year: currentDate.getFullYear(),
-        contentPlansCreated: 1,
-      },
     });
+
+    // Increment usage (if not using bonus)
+    if (usageCheck.allowed) {
+      await incrementUsage(session.user.id, 'plan');
+    }
 
     return NextResponse.json({
       success: true,
       plan: generatedPlan,
       contentPlanId: contentPlan.id,
+      usedBonus: !usageCheck.allowed,
     });
   } catch (error) {
     console.error('Content plan generation error:', error);

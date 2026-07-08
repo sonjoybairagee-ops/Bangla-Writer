@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { HOOK_TYPES, CONTENT_PLATFORMS } from '@/lib/constants/frameworks';
 import { Zap, Copy, Check } from 'lucide-react';
+import { copyToClipboard as copyWithToast } from '@/lib/utils/clipboard';
 
 export default function HooksPage() {
   const [formData, setFormData] = useState({
@@ -42,10 +43,12 @@ export default function HooksPage() {
     }
   };
 
-  const copyToClipboard = (text: string, index: number) => {
-    navigator.clipboard.writeText(text);
-    setCopied(index);
-    setTimeout(() => setCopied(null), 2000);
+  const copyToClipboard = async (text: string, index: number) => {
+    const success = await copyWithToast(text, 'Hook copied to clipboard! 🎯');
+    if (success) {
+      setCopied(index);
+      setTimeout(() => setCopied(null), 2000);
+    }
   };
 
   return (

@@ -1,4 +1,37 @@
 export const PRICING_PLANS = {
+  free: {
+    id: 'free',
+    name: 'Free Trial',
+    description: 'Try all features for 7 days',
+    prices: {
+      USD: 0,
+      BDT: 0,
+      EUR: 0,
+    },
+    paddle_price_ids: {
+      monthly_usd: '',
+      monthly_eur: '',
+      yearly_usd: '',
+      yearly_eur: '',
+    },
+    features: [
+      '7 days free trial',
+      '3 Content Write',
+      '3 Hook Generate',
+      '3 AI Writer',
+      'All basic features',
+    ],
+    limits: {
+      scripts_per_month: 3,
+      hooks_per_month: 3,
+      brand_profiles: 1,
+      content_plans: 3,
+      ovc_scenes: 0,
+      device_login: 1,
+    },
+    trial: true,
+    trialDays: 7,
+  },
   starter: {
     id: 'starter',
     name: 'Starter',

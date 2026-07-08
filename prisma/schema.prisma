@@ -32,6 +32,34 @@ model User {
   frameworks    Framework[]
   contentPlans  ContentPlan[]
   usage         Usage[]
+  
+  // Team Management (Agency plan)
+  ownedTeams        Team[]           @relation("TeamOwner")
+  teamMemberships   TeamMember[]
+  sentInvitations   TeamInvitation[] @relation("InvitationSender")
+  receivedInvitations TeamInvitation[] @relation("InvitationReceiver")
+  
+  // Support System
+  supportTickets    SupportTicket[]  @relation("TicketCreator")
+  assignedTickets   SupportTicket[]  @relation("TicketAssignee")
+  ticketMessages    TicketMessage[]
+  userSessions      UserSession[]
+  
+  // Referral System
+  referralCode      String?          @unique
+  referredBy        String?
+  referrer          User?            @relation("Referrals", fields: [referredBy], references: [id], onDelete: SetNull)
+  referrals         User[]           @relation("Referrals")
+  referralRewards   ReferralReward[]
+  
+  // Referral tracking (as referrer)
+  sentReferrals     Referral[]       @relation("ReferrerUser")
+  // Referral tracking (as referred)
+  receivedReferrals Referral[]       @relation("ReferredUser")
+  
+  // Discount tracking
+  hasLifetimeDiscount Boolean @default(false)
+  lifetimeDiscountPercent Int @default(0)
 }
 
 model Account {
@@ -112,24 +140,36 @@ model Payment {
   subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
 
   amount   Decimal
-  currency String
+  currency String @default("BDT")
+
+  // Plan info (for manual payment before subscription activation)
+  planId   String?
+  planName String?
+  billing  String? // monthly, yearly
 
   paymentGateway      String
   gatewayTransactionId String?
+  
+  // Manual payment verification
+  transactionId String? // User-provided TRX ID
+  phoneNumber   String? // User's bKash number
+  email         String? // User's email for confirmation
+  method        String? // bkash, nagad, rocket
+  verifiedBy    String? // Admin user ID who verified
+  verifiedAt    DateTime?
 
-  status String @default("pending") // success, failed, pending, refunded
-
-  // For local payments
-  paymentMethod String?
-  phoneNumber   String?
+  status String @default("pending") // pending, verified, rejected, success, failed, refunded
 
   metadata Json? // Store gateway-specific data
 
   paidAt    DateTime?
   createdAt DateTime  @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([subscriptionId])
+  @@index([status])
+  @@index([transactionId])
 }
 
 // Brand Brain
@@ -338,3 +378,237 @@ model PricingPlan {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// Team Management (Agency Plan)
+model Team {
+  id      String @id @default(cuid())
+  ownerId String
+  owner   User   @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+  avatar      String? // Team logo/avatar URL
+
+  // Settings
+  maxMembers Int @default(5) // Based on plan
+  isActive   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members     TeamMember[]
+  invitations TeamInvitation[]
+
+  @@index([ownerId])
+}
+
+model TeamMember {
+  id       String @id @default(cuid())
+  teamId   String
+  userId   String
+  team     Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role String // admin, member, creator
+  
+  // Permissions (for granular access control)
+  canManageTeam    Boolean @default(false) // Can invite/remove members, change settings
+  canManageBrands  Boolean @default(true)  // Can create/edit brands
+  canCreateContent Boolean @default(true)  // Can generate scripts/hooks/plans
+  canViewAnalytics Boolean @default(true)  // Can view team analytics
+
+  joinedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+}
+
+model TeamInvitation {
+  id       String @id @default(cuid())
+  teamId   String
+  senderId String
+  team     Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  sender   User   @relation("InvitationSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  // Invitation details
+  email       String
+  role        String // admin, member, creator
+  token       String @unique @default(cuid())
+  
+  // Receiver (if user already exists)
+  receiverId  String?
+  receiver    User?   @relation("InvitationReceiver", fields: [receiverId], references: [id], onDelete: SetNull)
+
+  // Status
+  status      String   @default("pending") // pending, accepted, declined, expired
+  expiresAt   DateTime
+  respondedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teamId])
+  @@index([email])
+  @@index([token])
+  @@index([status])
+}
+
+// Session Tracking (for admin monitoring)
+model UserSession {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Session info
+  sessionId   String   @unique
+  ipAddress   String?
+  userAgent   String?
+  country     String?
+  city        String?
+  device      String?
+  browser     String?
+  os          String?
+
+  // Activity
+  currentPage String?
+  lastActivity DateTime @default(now())
+  
+  // Status
+  isActive    Boolean  @default(true)
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([isActive])
+}
+
+// Live Support System
+model SupportTicket {
+  id        String @id @default(cuid())
+  userId    String
+  user      User   @relation("TicketCreator", fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Ticket details
+  subject     String
+  description String  @db.Text
+  priority    String  @default("medium") // low, medium, high, critical
+  category    String? // technical, billing, feature_request, bug, other
+  
+  // Status
+  status      String  @default("open") // open, in_progress, waiting, resolved, closed
+  
+  // Assignment
+  assignedToId String?
+  assignedTo   User?   @relation("TicketAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  assignedAt   DateTime?
+  
+  // Resolution
+  resolvedAt  DateTime?
+  closedAt    DateTime?
+  
+  // Metadata
+  userAgent   String?
+  ipAddress   String?
+  sessionId   String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages TicketMessage[]
+
+  @@index([userId])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([priority])
+}
+
+model TicketMessage {
+  id       String        @id @default(cuid())
+  ticketId String
+  userId   String
+  ticket   SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  message     String  @db.Text
+  isInternal  Boolean @default(false) // Internal notes only visible to admins
+  isAdminReply Boolean @default(false) // Is this from admin?
+  
+  // Attachments
+  attachments Json? // Array of file URLs
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ticketId])
+  @@index([userId])
+}
+
+// Referral Program
+model ReferralReward {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Reward details
+  type        String // bonus_generations, free_month, lifetime_discount
+  description String
+  amount      Int    // Generations count or months
+  
+  // Bonus generations tracking
+  generationsTotal     Int @default(0) // Total bonus generations awarded
+  generationsUsed      Int @default(0) // How many used
+  generationsRemaining Int @default(0) // Remaining
+  
+  // Status
+  status      String   @default("active") // active, used, expired
+  expiresAt   DateTime? // For bonus generations (6 months)
+  appliedAt   DateTime? // When reward was applied
+  
+  // Source
+  referralCount Int @default(0) // Number of paid referrals to earn this (1, 3, 5, 10, 25)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+}
+
+model Referral {
+  id            String @id @default(cuid())
+  referrerId    String // User who sent the invite
+  referredUserId String // User who signed up
+  
+  referrer User @relation("ReferrerUser", fields: [referrerId], references: [id], onDelete: Cascade)
+  referred User @relation("ReferredUser", fields: [referredUserId], references: [id], onDelete: Cascade)
+  
+  // Tracking
+  status         String   @default("pending") // pending, paid, rewarded, expired, invalid
+  ipAddress      String?
+  userAgent      String?
+  
+  // Payment tracking
+  firstPaidAt    DateTime? // When referred user made first payment
+  rewardGivenAt  DateTime? // When referrer got reward
+  
+  // Anti-abuse
+  paymentMethod  String? // To detect same payment method
+  isValid        Boolean  @default(true) // Can be invalidated if abuse detected
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([referrerId, referredUserId]) // Prevent duplicate referrals
+  @@index([referrerId])
+  @@index([referredUserId])
+  @@index([status])
+}
+
+

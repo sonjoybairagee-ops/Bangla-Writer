@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth';
 import { DashboardNav } from '@/components/dashboard/nav';
 import { DashboardHeader } from '@/components/dashboard/header';
+import { SupportBubble } from '@/components/support/support-bubble';
+import { Toaster } from '@/components/ui/toaster';
 
 export default async function DashboardLayout({
   children,
@@ -22,6 +24,8 @@ export default async function DashboardLayout({
         <DashboardNav />
         <main className="flex-1 p-6">{children}</main>
       </div>
+      <SupportBubble />
+      <Toaster />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { COPYWRITING_FRAMEWORKS, CONTENT_PLATFORMS, CONTENT_GOALS, CONTENT_TONES } from '@/lib/constants/frameworks';
 import { Sparkles, Copy, Check, Zap, Hash, MessageSquare, Target } from 'lucide-react';
+import { copyToClipboard as copyWithToast } from '@/lib/utils/clipboard';
 
 export default function WriterProPage() {
   const [brands, setBrands] = useState<any[]>([]);
@@ -181,10 +182,12 @@ export default function WriterProPage() {
     }
   };
 
-  const copyToClipboard = (text: string, field: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(field);
-    setTimeout(() => setCopied(null), 2000);
+  const copyToClipboard = async (text: string, field: string) => {
+    const success = await copyWithToast(text, '✓ Content copied to clipboard!');
+    if (success) {
+      setCopied(field);
+      setTimeout(() => setCopied(null), 2000);
+    }
   };
 
   return (
