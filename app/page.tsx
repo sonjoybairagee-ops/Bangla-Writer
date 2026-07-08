@@ -1,65 +1,141 @@
-import Image from "next/image";
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { 
+  Sparkles, 
+  Brain, 
+  Film, 
+  Calendar, 
+  Zap,
+  Globe,
+  ArrowRight 
+} from 'lucide-react';
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Header */}
+      <header className="border-b bg-white/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-8 w-8 text-purple-600" />
+            <span className="text-2xl font-bold">Bangla Creator</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/login">
+              <Button variant="ghost">Login</Button>
+            </Link>
+            <Link href="/register">
+              <Button>Get Started</Button>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="container mx-auto px-4 py-20 text-center">
+        <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          Your Complete Content
+          <br />
+          Operating System
+        </h1>
+        <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto">
+          Create, plan, and manage all your content with AI. From strategy to execution,
+          powered by advanced AI that learns your brand.
+        </p>
+        <div className="flex items-center justify-center gap-4">
+          <Link href="/register">
+            <Button size="lg" className="text-lg">
+              Start Free Trial <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
+          <Link href="/pricing">
+            <Button size="lg" variant="outline" className="text-lg">
+              View Pricing
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="container mx-auto px-4 py-20">
+        <h2 className="text-4xl font-bold text-center mb-12">
+          Everything You Need in One Platform
+        </h2>
+        <div className="grid md:grid-cols-3 gap-8">
+          <FeatureCard
+            icon={<Brain className="h-10 w-10 text-purple-600" />}
+            title="Brand Brain"
+            description="AI learns your brand voice, tone, and style. Never repeat yourself - teach it once, create forever."
+          />
+          <FeatureCard
+            icon={<Sparkles className="h-10 w-10 text-pink-600" />}
+            title="AI Content Writer"
+            description="Generate scroll-stopping content with 7+ proven frameworks. AIDA, PAS, BAB, and more."
+          />
+          <FeatureCard
+            icon={<Film className="h-10 w-10 text-blue-600" />}
+            title="OVC Director"
+            description="Complete video shoot breakdowns with camera angles, lighting, and dialogue. Professional videos made easy."
+          />
+          <FeatureCard
+            icon={<Calendar className="h-10 w-10 text-green-600" />}
+            title="Content Planner"
+            description="30-day content strategies generated in minutes. Never run out of content ideas again."
+          />
+          <FeatureCard
+            icon={<Zap className="h-10 w-10 text-yellow-600" />}
+            title="Hook Generator"
+            description="Scroll-stopping hooks using psychological triggers. Fear, curiosity, authority, and more."
+          />
+          <FeatureCard
+            icon={<Globe className="h-10 w-10 text-indigo-600" />}
+            title="Multi-Platform"
+            description="Optimized for Facebook, Instagram, TikTok, YouTube, LinkedIn, and more."
+          />
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="container mx-auto px-4 py-20 text-center">
+        <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl p-12 text-white">
+          <h2 className="text-4xl font-bold mb-4">
+            Ready to Transform Your Content?
+          </h2>
+          <p className="text-xl mb-8 opacity-90">
+            Join thousands of creators and businesses using Bangla Creator
           </p>
+          <Link href="/register">
+            <Button size="lg" variant="secondary" className="text-lg">
+              Start Creating Now
+            </Button>
+          </Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t bg-white/50 backdrop-blur-sm py-8">
+        <div className="container mx-auto px-4 text-center text-slate-600">
+          <p>&copy; 2026 Bangla Creator. All rights reserved.</p>
         </div>
-      </main>
+      </footer>
+    </div>
+  );
+}
+
+function FeatureCard({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+      <div className="mb-4">{icon}</div>
+      <h3 className="text-xl font-bold mb-2">{title}</h3>
+      <p className="text-slate-600">{description}</p>
     </div>
   );
 }
