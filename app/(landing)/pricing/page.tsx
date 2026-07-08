@@ -63,6 +63,14 @@ const PLAN_STYLE: Record<string, {
   },
 };
 
+// Trust badges array
+const TRUST_BADGES = [
+  { icon: Shield, title: '30 Day Money Back', sub: 'Risk-free trial' },
+  { icon: Clock, title: '24 Hour Activation', sub: 'Instant start' },
+  { icon: RefreshCcw, title: 'Cancel Anytime', sub: 'No commitments' },
+  { icon: Wallet, title: 'bKash Send Money', sub: 'Easy payment' },
+];
+
 export default function PricingPage() {
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
 
@@ -229,12 +237,7 @@ export default function PricingPage() {
 
         {/* ── Trust Badges ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-          {[
-            { icon: Shield, title: '30 Day Money Back', sub: 'Risk-free trial' },
-            { icon: Clock, title: '24 Hour Activation', sub: 'Instant start' },
-            { icon: RefreshCcw, title: 'Cancel Anytime', sub: 'No commitments' },
-            { icon: Wallet, title: 'bKash Send Money', sub: 'Easy payment' },
-          ].map((badge, index) => {
+          {TRUST_BADGES.map((badge, index) => {
             const IconComponent = badge.icon;
             return (
               <div key={index} className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-sm hover:shadow-md transition-shadow">
