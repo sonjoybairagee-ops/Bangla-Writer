@@ -230,22 +230,23 @@ export default function PricingPage() {
         {/* ── Trust Badges ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
           {[
-            { icon: Shield,      title: '30 Day Money Back',       sub: 'Risk-free trial' },
-            { icon: Clock,       title: '24 Hour Activation',      sub: 'Instant start' },
-            { icon: RefreshCcw,  title: 'Cancel Anytime',          sub: 'No commitments' },
-            { icon: Wallet,      title: 'bKash Send Money',        sub: 'Easy payment' },
-          ].map(({ icon, title, sub }) => {
-            const IconComponent = icon;
+            { icon: Shield, title: '30 Day Money Back', sub: 'Risk-free trial' },
+            { icon: Clock, title: '24 Hour Activation', sub: 'Instant start' },
+            { icon: RefreshCcw, title: 'Cancel Anytime', sub: 'No commitments' },
+            { icon: Wallet, title: 'bKash Send Money', sub: 'Easy payment' },
+          ].map((badge) => {
+            const Icon = badge.icon;
             return (
-              <div key={title} className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-sm hover:shadow-md transition-shadow">
+              <div key={badge.title} className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-sm hover:shadow-md transition-shadow">
                 <div className="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center">
-                  <IconComponent className="w-5 h-5 text-purple-600" />
+                  <Icon className="w-5 h-5 text-purple-600" />
                 </div>
-                <p className="text-sm font-semibold text-slate-800">{title}</p>
-                <p className="text-xs text-slate-400">{sub}</p>
+                <p className="text-sm font-semibold text-slate-800">{badge.title}</p>
+                <p className="text-xs text-slate-400">{badge.sub}</p>
               </div>
             );
           })}
+        </div>
         </div>
 
         {/* FAQ Section */}
