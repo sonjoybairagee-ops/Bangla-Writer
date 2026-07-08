@@ -213,3 +213,23 @@ Return a JSON object:
 Make it actionable, strategic, results-focused, and optimized for viral growth.
 `.trim();
 }
+
+export function createBrandVoicePrompt(brandName: string, existingContent?: string): string {
+  return `
+You are a brand voice analyzer. Analyze the following content and extract the brand voice characteristics.
+
+BRAND: ${brandName}
+
+${existingContent ? `EXISTING CONTENT:\n${existingContent}` : 'No existing content provided.'}
+
+Analyze and return a JSON object with:
+{
+  "tone": "The overall tone (e.g., friendly, professional, playful)",
+  "personality": "Brand personality traits",
+  "vocabulary": ["Key", "words", "and", "phrases"],
+  "writingStyle": "Description of writing style",
+  "dosList": ["Things", "the", "brand", "does"],
+  "dontsList": ["Things", "the", "brand", "avoids"]
+}
+`.trim();
+}

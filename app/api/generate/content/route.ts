@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { generateJSON } from '@/lib/ai/openai';
-import { createContentWriterPrompt, createBrandVoicePrompt } from '@/lib/ai/prompts/content-writer';
+import { createContentWriterPrompt } from '@/lib/ai/prompts/content-writer';
+import { createBrandVoicePrompt } from '@/lib/ai/prompts/brand-extractor';
 import { canGenerateScript } from '@/lib/constants/pricing';
 
 export async function POST(req: NextRequest) {
