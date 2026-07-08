@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
       audience,
       brandId,
       name,
+      language = 'bangla',
     } = body;
 
     // Check usage limits
@@ -66,6 +67,7 @@ export async function POST(req: NextRequest) {
       contentStyle,
       tone,
       audience,
+      language,
     });
 
     const generatedPlan = await generateJSON(prompt, {

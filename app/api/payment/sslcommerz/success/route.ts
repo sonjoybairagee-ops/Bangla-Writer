@@ -19,8 +19,13 @@ export async function POST(req: NextRequest) {
 
     // Create subscription
     const currentDate = new Date();
-    const nextMonth = new Date(currentDate);
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const nextBillingDate = new Date(currentDate);
+    
+    if (result.billingCycle === 'yearly') {
+      nextBillingDate.setFullYear(nextBillingDate.getFullYear() + 1);
+    } else {
+      nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+    }
 
     await prisma.subscription.create({
       data: {
@@ -32,10 +37,10 @@ export async function POST(req: NextRequest) {
         status: 'active',
         amount: result.paymentData.amount,
         currency: result.paymentData.currency,
-        billingCycle: 'monthly',
+        billingCycle: result.billingCycle,
         currentPeriodStart: currentDate,
-        currentPeriodEnd: nextMonth,
-        nextBillingDate: nextMonth,
+        currentPeriodEnd: nextBillingDate,
+        nextBillingDate: nextBillingDate,
       },
     });
 

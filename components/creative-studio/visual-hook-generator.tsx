@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Zap, Eye } from 'lucide-react';
+import { Zap, Eye, Copy } from 'lucide-react';
 
 interface VisualHook {
   name: string;
@@ -22,6 +22,7 @@ export function VisualHookGenerator() {
     topic: '',
     platform: 'instagram',
     emotion: 'curiosity',
+    language: 'bangla',
   });
   const [generating, setGenerating] = useState(false);
   const [results, setResults] = useState<VisualHook[]>([]);
@@ -44,6 +45,22 @@ export function VisualHookGenerator() {
     } finally {
       setGenerating(false);
     }
+  };
+
+  const copyToClipboard = (hook: VisualHook) => {
+    const text = `
+Visual Hook: ${hook.name}
+Stop Score: ${hook.stopScore}/100
+
+Description: ${hook.description}
+
+--- DETAILS ---
+Text Overlay: ${hook.textOverlay}
+Visual Elements: ${hook.visualElements.join(', ')}
+Timing: ${hook.timing}
+Psychology: ${hook.psychology}
+    `.trim();
+    navigator.clipboard.writeText(text);
   };
 
   return (
@@ -87,6 +104,41 @@ export function VisualHookGenerator() {
                 <option value="fear">Fear/Urgency</option>
               </select>
             </div>
+
+            {/* Language */}
+            <div>
+              <label className="text-sm font-medium">Language Output</label>
+              <div className="grid grid-cols-3 gap-2 mt-1">
+                <Button
+                  type="button"
+                  variant={formData.language === 'bangla' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'bangla' })}
+                  className={formData.language === 'bangla' ? 'bg-pink-600 hover:bg-pink-700' : ''}
+                >
+                  বাংলা
+                </Button>
+                <Button
+                  type="button"
+                  variant={formData.language === 'english' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'english' })}
+                  className={formData.language === 'english' ? 'bg-pink-600 hover:bg-pink-700' : ''}
+                >
+                  English
+                </Button>
+                <Button
+                  type="button"
+                  variant={formData.language === 'banglish' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'banglish' })}
+                  className={formData.language === 'banglish' ? 'bg-pink-600 hover:bg-pink-700' : ''}
+                >
+                  বাংলিশ
+                </Button>
+              </div>
+            </div>
+
             <Button onClick={handleGenerate} disabled={generating} className="w-full">
               Generate Visual Hooks
             </Button>
@@ -98,12 +150,22 @@ export function VisualHookGenerator() {
         {results.map((hook, i) => (
           <Card key={i}>
             <CardHeader>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <CardTitle className="text-lg">{hook.name}</CardTitle>
-                <Badge>
-                  <Eye className="h-3 w-3 mr-1" />
-                  {hook.stopScore}/100 Stop Score
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge>
+                    <Eye className="h-3 w-3 mr-1" />
+                    {hook.stopScore}/100 Stop Score
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(hook)}
+                    title="Copy to clipboard"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">

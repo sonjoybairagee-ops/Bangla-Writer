@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Video, Zap, User } from 'lucide-react';
+import { Video, Zap, User, Copy } from 'lucide-react';
 
 interface UGCScript {
   type: string;
@@ -25,6 +25,7 @@ export function UGCGenerator() {
     benefit: '',
     targetAudience: '',
     ugcType: 'testimonial',
+    language: 'bangla',
   });
   const [generating, setGenerating] = useState(false);
   const [results, setResults] = useState<UGCScript[]>([]);
@@ -47,6 +48,29 @@ export function UGCGenerator() {
     } finally {
       setGenerating(false);
     }
+  };
+
+  const copyToClipboard = (script: UGCScript) => {
+    const text = `
+UGC Script: ${script.title}
+Type: ${script.type}
+Authenticity Score: ${script.authenticityScore}/100
+
+--- HOOK ---
+${script.hook}
+
+--- SCRIPT ---
+${script.script}
+
+--- TALKING POINTS ---
+${script.talkingPoints.map(point => '• ' + point).join('\n')}
+
+--- DETAILS ---
+Props: ${script.props.join(', ')}
+Setting: ${script.setting}
+Duration: ${script.duration}
+    `.trim();
+    navigator.clipboard.writeText(text);
   };
 
   return (
@@ -93,6 +117,41 @@ export function UGCGenerator() {
                 <option value="tutorial">How-To Tutorial</option>
               </select>
             </div>
+
+            {/* Language */}
+            <div>
+              <label className="text-sm font-medium">Language Output</label>
+              <div className="grid grid-cols-3 gap-2 mt-1">
+                <Button
+                  type="button"
+                  variant={formData.language === 'bangla' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'bangla' })}
+                  className={formData.language === 'bangla' ? 'bg-pink-600 hover:bg-pink-700' : ''}
+                >
+                  বাংলা
+                </Button>
+                <Button
+                  type="button"
+                  variant={formData.language === 'english' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'english' })}
+                  className={formData.language === 'english' ? 'bg-pink-600 hover:bg-pink-700' : ''}
+                >
+                  English
+                </Button>
+                <Button
+                  type="button"
+                  variant={formData.language === 'banglish' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'banglish' })}
+                  className={formData.language === 'banglish' ? 'bg-pink-600 hover:bg-pink-700' : ''}
+                >
+                  বাংলিশ
+                </Button>
+              </div>
+            </div>
+
             <Button onClick={handleGenerate} disabled={generating} className="w-full">
               {generating ? 'Generating...' : 'Generate UGC Scripts'}
             </Button>
@@ -109,10 +168,20 @@ export function UGCGenerator() {
                   <CardTitle>{script.title}</CardTitle>
                   <Badge className="mt-2">{script.type}</Badge>
                 </div>
-                <Badge variant="secondary">
-                  <User className="h-3 w-3 mr-1" />
-                  {script.authenticityScore}/100 Authentic
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">
+                    <User className="h-3 w-3 mr-1" />
+                    {script.authenticityScore}/100 Authentic
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(script)}
+                    title="Copy to clipboard"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">

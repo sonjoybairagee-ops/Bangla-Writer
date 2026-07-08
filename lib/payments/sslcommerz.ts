@@ -7,6 +7,7 @@ interface CreateCheckoutParams {
   userEmail: string;
   userName: string;
   userPhone?: string;
+  billing?: string;
 }
 
 export async function createSSLCommerzCheckout({
@@ -15,6 +16,7 @@ export async function createSSLCommerzCheckout({
   userEmail,
   userName,
   userPhone = '01700000000',
+  billing = 'monthly',
 }: CreateCheckoutParams) {
   const plan = PRICING_PLANS[planId as keyof typeof PRICING_PLANS];
 
@@ -22,7 +24,10 @@ export async function createSSLCommerzCheckout({
     throw new Error('Invalid plan ID');
   }
 
-  const amount = plan.prices.BDT;
+  const YEARLY_DISCOUNT = 0.20;
+  const amount = billing === 'yearly' 
+    ? Math.round(plan.prices.BDT * 12 * (1 - YEARLY_DISCOUNT))
+    : plan.prices.BDT;
   const transactionId = `TXN_${Date.now()}_${userId}`;
 
   const store_id = process.env.SSLCOMMERZ_STORE_ID!;
@@ -57,6 +62,7 @@ export async function createSSLCommerzCheckout({
     value_a: userId,
     value_b: planId,
     value_c: transactionId,
+    value_d: billing,
   };
 
   try {
@@ -101,6 +107,7 @@ export async function handleSSLCommerzSuccess(data: any) {
     status,
     value_a: userId,
     value_b: planId,
+    value_d: billingCycle = 'monthly',
   } = data;
 
   if (status !== 'VALID' && status !== 'VALIDATED') {
@@ -117,6 +124,7 @@ export async function handleSSLCommerzSuccess(data: any) {
   return {
     userId,
     planId,
+    billingCycle,
     paymentData: {
       transactionId: tran_id,
       paymentMethod: card_type,

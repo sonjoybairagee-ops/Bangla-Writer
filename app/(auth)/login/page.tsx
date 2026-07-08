@@ -7,12 +7,13 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -29,13 +30,17 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError('Invalid email or password');
+        if (result.error === 'EMAIL_NOT_VERIFIED') {
+          setError('EMAIL_NOT_VERIFIED');
+        } else {
+          setError('ইমেইল বা পাসওয়ার্ড ভুল।');
+        }
       } else {
         router.push('/dashboard');
         router.refresh();
       }
     } catch (error) {
-      setError('Something went wrong');
+      setError('কিছু একটা সমস্যা হয়েছে।');
     } finally {
       setLoading(false);
     }
@@ -59,9 +64,22 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-                {error}
-              </div>
+              error === 'EMAIL_NOT_VERIFIED' ? (
+                <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-md text-sm">
+                  <p className="font-semibold mb-1">📧 ইমেইল ভেরিফাই হয়নি!</p>
+                  <p className="text-xs mb-2">আপনার ইমেইলে পাঠানো কোডটি দিয়ে ভেরিফাই করুন।</p>
+                  <a
+                    href={`/verify-email?email=${encodeURIComponent(email)}`}
+                    className="inline-block bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-md hover:bg-amber-700 transition-colors"
+                  >
+                    কোড ভেরিফাই করুন →
+                  </a>
+                </div>
+              ) : (
+                <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+                  {error}
+                </div>
+              )
             )}
 
             <div className="space-y-2">
@@ -76,14 +94,36 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Password</label>
-              <Input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Password</label>
+                <Link 
+                  href="/forgot-password" 
+                  className="text-xs text-purple-600 hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>

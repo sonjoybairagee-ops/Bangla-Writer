@@ -17,6 +17,7 @@ import {
   Sparkles,
   Palette,
   Target,
+  Shield,
 } from 'lucide-react';
 
 const navSections = [
@@ -106,6 +107,12 @@ const navSections = [
         href: '/dashboard/billing',
         icon: CreditCard,
       },
+      {
+        title: 'Admin Panel',
+        href: '/admin',
+        icon: Shield,
+        badge: 'ADMIN',
+      },
     ],
   },
 ];
@@ -149,7 +156,8 @@ export function DashboardNav() {
                         "text-xs px-2 py-0.5 rounded-full font-semibold",
                         (item as any).badge === 'NEW' && "bg-green-100 text-green-700",
                         (item as any).badge === 'PRO' && "bg-purple-100 text-purple-700",
-                        (item as any).badge === 'BETA' && "bg-blue-100 text-blue-700"
+                        (item as any).badge === 'BETA' && "bg-blue-100 text-blue-700",
+                        (item as any).badge === 'ADMIN' && "bg-amber-100 text-amber-700"
                       )}>
                         {(item as any).badge}
                       </span>

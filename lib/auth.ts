@@ -31,13 +31,16 @@ export const authOptions: NextAuthOptions = {
         }
 
         const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email,
-          },
+          where: { email: credentials.email },
         });
 
         if (!user || !user.password) {
           throw new Error('Invalid credentials');
+        }
+
+        // ✅ Block unverified users
+        if (!user.emailVerified) {
+          throw new Error('EMAIL_NOT_VERIFIED');
         }
 
         const isCorrectPassword = await bcrypt.compare(

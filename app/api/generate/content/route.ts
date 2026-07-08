@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
       audience,
       duration,
       brandId,
+      language = 'bangla',
       saveToLibrary = true,
     } = body;
 
@@ -82,6 +83,7 @@ export async function POST(req: NextRequest) {
       audience,
       duration,
       brandVoice,
+      language,
     });
 
     const generatedContent = await generateJSON(prompt, {

@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { topic, platform, audience, hookType, count = 10 } = body;
+    const { topic, platform, audience, hookType, language = 'bangla', count = 10 } = body;
 
     // Check usage limits
     const subscription = await prisma.subscription.findFirst({
@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
       audience,
       hookType,
       count,
+      language,
     });
 
     const generatedHooks = await generateJSON(prompt, {

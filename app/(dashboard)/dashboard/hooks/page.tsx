@@ -14,6 +14,7 @@ export default function HooksPage() {
     audience: '',
     hookType: 'CURIOSITY',
     count: 10,
+    language: 'bangla',
   });
   const [generating, setGenerating] = useState(false);
   const [hooks, setHooks] = useState<any[]>([]);
@@ -75,6 +76,40 @@ export default function HooksPage() {
                   setFormData({ ...formData, topic: e.target.value })
                 }
               />
+            </div>
+
+            {/* Language */}
+            <div>
+              <label className="text-sm font-medium">Language Output</label>
+              <div className="grid grid-cols-3 gap-2 mt-1">
+                <Button
+                  type="button"
+                  variant={formData.language === 'bangla' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'bangla' })}
+                  className={formData.language === 'bangla' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+                >
+                  বাংলা
+                </Button>
+                <Button
+                  type="button"
+                  variant={formData.language === 'english' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'english' })}
+                  className={formData.language === 'english' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+                >
+                  English
+                </Button>
+                <Button
+                  type="button"
+                  variant={formData.language === 'banglish' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'banglish' })}
+                  className={formData.language === 'banglish' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+                >
+                  বাংলিশ
+                </Button>
+              </div>
             </div>
 
             <div>

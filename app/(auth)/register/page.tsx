@@ -23,7 +23,6 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // Register user
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -34,23 +33,11 @@ export default function RegisterPage() {
 
       if (!response.ok) {
         setError(data.error || 'Failed to create account');
-        setLoading(false);
         return;
       }
 
-      // Sign in after successful registration
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setError('Account created but failed to sign in');
-      } else {
-        router.push('/dashboard');
-        router.refresh();
-      }
+      // Redirect to OTP verification page
+      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (error) {
       setError('Something went wrong');
     } finally {

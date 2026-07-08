@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
             planId: result.planId,
             paymentGateway: 'paddle',
             ...result.subscriptionData,
-            billingCycle: 'monthly',
+            billingCycle: result.billingCycle,
           },
         });
 

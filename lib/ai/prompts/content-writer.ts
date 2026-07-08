@@ -10,6 +10,7 @@ interface ContentWriterParams {
   duration?: number;
   brandVoice?: string;
   additionalContext?: string;
+  language?: string;
 }
 
 export function createContentWriterPrompt(params: ContentWriterParams): string {
@@ -31,6 +32,8 @@ ${params.duration ? `DURATION: ${params.duration} seconds` : ''}
 ${params.brandVoice ? `BRAND VOICE:\n${params.brandVoice}` : ''}
 
 ${params.additionalContext ? `ADDITIONAL CONTEXT:\n${params.additionalContext}` : ''}
+
+OUTPUT LANGUAGE: ${params.language === 'banglish' ? 'Conversational Banglish (Bengali words written using English alphabet)' : params.language === 'english' ? 'English' : 'Bangla (শুদ্ধ বাংলা)'}. The generated content MUST be written strictly in this language.
 
 Create compelling content following the ${framework?.name || params.framework} framework.
 
@@ -64,6 +67,7 @@ export function createHookGeneratorPrompt(params: {
   audience: string;
   hookType: string;
   count?: number;
+  language?: string;
 }): string {
   return `
 You are a viral content expert specializing in scroll-stopping hooks.
@@ -72,6 +76,7 @@ TOPIC: ${params.topic}
 PLATFORM: ${params.platform}
 TARGET AUDIENCE: ${params.audience}
 HOOK TYPE: ${params.hookType}
+OUTPUT LANGUAGE: ${params.language === 'banglish' ? 'Conversational Banglish (Bengali words written using English alphabet)' : params.language === 'english' ? 'English' : 'Bangla (শুদ্ধ বাংলা)'}. The generated hooks MUST be written strictly in this language.
 
 Generate ${params.count || 10} powerful, scroll-stopping hooks for this topic.
 
@@ -108,6 +113,7 @@ export function createContentPlanPrompt(params: {
   contentStyle: string[];
   tone: string;
   audience: string;
+  language?: string;
 }): string {
   return `
 You are a content strategist creating a ${params.duration}-day content plan.
@@ -119,6 +125,7 @@ GOAL: ${params.goal}
 CONTENT STYLE: ${params.contentStyle.join(', ')}
 TONE: ${params.tone}
 TARGET AUDIENCE: ${params.audience}
+OUTPUT LANGUAGE: ${params.language === 'banglish' ? 'Conversational Banglish (Bengali words written using English alphabet)' : params.language === 'english' ? 'English' : 'Bangla (শুদ্ধ বাংলা)'}. All generated ideas, hooks, and topics MUST be written strictly in this language.
 
 Create a strategic ${params.duration}-day content calendar that:
 - Balances different content types (educational, promotional, engagement)

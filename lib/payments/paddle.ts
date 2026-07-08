@@ -5,6 +5,7 @@ interface CreateCheckoutParams {
   planId: string;
   email: string;
   country?: string;
+  billing?: string;
 }
 
 export async function createPaddleCheckout({
@@ -12,6 +13,7 @@ export async function createPaddleCheckout({
   planId,
   email,
   country = 'US',
+  billing = 'monthly',
 }: CreateCheckoutParams) {
   const plan = PRICING_PLANS[planId as keyof typeof PRICING_PLANS];
 
@@ -21,10 +23,17 @@ export async function createPaddleCheckout({
 
   // Determine currency based on country
   const currency = country === 'BD' ? 'BDT' : 'USD';
-  const priceId =
-    currency === 'USD'
-      ? plan.paddle_price_ids.monthly_usd
+  let priceId = '';
+  
+  if (billing === 'yearly') {
+    priceId = currency === 'USD' 
+      ? plan.paddle_price_ids.yearly_usd 
+      : plan.paddle_price_ids.yearly_eur;
+  } else {
+    priceId = currency === 'USD' 
+      ? plan.paddle_price_ids.monthly_usd 
       : plan.paddle_price_ids.monthly_eur;
+  }
 
   try {
     const response = await fetch('https://api.paddle.com/checkouts', {
@@ -46,6 +55,7 @@ export async function createPaddleCheckout({
         custom_data: {
           user_id: userId,
           plan_id: planId,
+          billing_cycle: billing,
         },
         success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?payment=success`,
         cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?payment=cancelled`,
@@ -82,6 +92,7 @@ export async function handlePaddleWebhook(payload: any) {
         type: 'subscription.created',
         userId: data.custom_data.user_id,
         planId: data.custom_data.plan_id,
+        billingCycle: data.custom_data.billing_cycle || 'monthly',
         subscriptionData: {
           paddleSubscriptionId: data.id,
           paddleCustomerId: data.customer_id,

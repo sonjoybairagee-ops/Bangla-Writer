@@ -30,10 +30,20 @@ export default function DashboardPage() {
   const [usage, setUsage] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [recentScripts, setRecentScripts] = useState<any[]>([]);
 
   useEffect(() => {
     fetchUsage();
+    fetchRecentScripts();
   }, []);
+
+  const fetchRecentScripts = async () => {
+    try {
+      const res = await fetch('/api/scripts?limit=3');
+      const data = await res.json();
+      if (data.scripts) setRecentScripts(data.scripts.slice(0, 3));
+    } catch {}
+  };
 
   const fetchUsage = async () => {
     try {
@@ -99,23 +109,43 @@ export default function DashboardPage() {
       {/* AI Command Bar */}
       <Card className="border-2 border-dashed border-purple-200 hover:border-purple-400 transition-colors">
         <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!searchQuery.trim()) return;
+              const q = searchQuery.toLowerCase();
+              if (q.includes('hook')) window.location.href = '/dashboard/hooks';
+              else if (q.includes('plan') || q.includes('campaign') || q.includes('calendar')) window.location.href = '/dashboard/content-planner';
+              else if (q.includes('ad') || q.includes('creative') || q.includes('thumbnail') || q.includes('ugc')) window.location.href = '/dashboard/creative-studio';
+              else if (q.includes('brand') || q.includes('voice')) window.location.href = '/dashboard/brand-brain';
+              else if (q.includes('analytic') || q.includes('performance')) window.location.href = '/dashboard/analytics';
+              else window.location.href = `/dashboard/writer-pro?q=${encodeURIComponent(searchQuery)}`;
+            }}
+            className="relative flex items-center gap-2"
+          >
+            <Search className="absolute left-3 h-5 w-5 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="Ask AI... (e.g., Create 30 day skincare plan, Generate hooks, Write ad copy)"
+              placeholder="AI-কে বলুন... (যেমন: hook বানাও, ৩০ দিনের plan, skincare ad লেখো)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-12 text-base border-0 focus-visible:ring-0"
+              className="pl-10 pr-28 h-12 text-base border-0 focus-visible:ring-0"
             />
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <Badge className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-                <Sparkles className="h-3 w-3 mr-1" />
-                AI
-              </Badge>
-            </div>
-          </div>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={!searchQuery.trim()}
+              className="absolute right-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg px-4 h-8"
+            >
+              <Sparkles className="h-3.5 w-3.5 mr-1" />
+              Go
+            </Button>
+          </form>
+          <p className="text-xs text-muted-foreground mt-2 pl-1">
+            💡 Try: "hook generator", "30 day content plan", "Facebook ad script"
+          </p>
         </CardContent>
       </Card>
+
 
       {/* Today's Usage Cards */}
       {!loading && usage && (
@@ -135,9 +165,7 @@ export default function DashboardPage() {
               value={usage.usage.scriptsGenerated}
               limit={usage.limits.scripts_per_month}
               icon={<FileText className="h-6 w-6 text-purple-600" />}
-              trend="+18%"
-              trendUp={true}
-              subtitle="Today"
+              subtitle="এই মাসে"
               bgColor="from-purple-50 to-purple-100"
             />
             <UsageCard
@@ -145,9 +173,7 @@ export default function DashboardPage() {
               value={usage.usage.hooksGenerated}
               limit={usage.limits.hooks_per_month}
               icon={<Zap className="h-6 w-6 text-yellow-600" />}
-              trend="+24%"
-              trendUp={true}
-              subtitle="Today"
+              subtitle="এই মাসে"
               bgColor="from-yellow-50 to-yellow-100"
             />
             <UsageCard
@@ -155,9 +181,7 @@ export default function DashboardPage() {
               value={usage.usage.contentPlansCreated}
               limit={usage.limits.content_plans}
               icon={<Calendar className="h-6 w-6 text-green-600" />}
-              trend="+12%"
-              trendUp={true}
-              subtitle="This Month"
+              subtitle="এই মাসে"
               bgColor="from-green-50 to-green-100"
             />
             <UsageCard
@@ -165,9 +189,7 @@ export default function DashboardPage() {
               value={usage.usage.ovcScenesGenerated}
               limit={usage.limits.ovc_scenes}
               icon={<Film className="h-6 w-6 text-blue-600" />}
-              trend="+8%"
-              trendUp={true}
-              subtitle="This Month"
+              subtitle="এই মাসে"
               bgColor="from-blue-50 to-blue-100"
             />
           </div>
@@ -191,22 +213,32 @@ export default function DashboardPage() {
               </Link>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Film className="h-4 w-4 text-purple-600" />
+            <CardContent>
+              <div className="space-y-3">
+                {recentScripts.length > 0 ? recentScripts.map((script) => (
+                  <Link key={script.id} href={`/dashboard/library`}>
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
+                      <div className="p-2 bg-purple-100 rounded-lg">
+                        <Film className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm truncate">{script.title}</h4>
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {script.type} • {new Date(script.createdAt).toLocaleDateString('bn-BD')}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="capitalize shrink-0">{script.platform || 'draft'}</Badge>
+                    </div>
+                  </Link>
+                )) : (
+                  <div className="text-center py-8 text-slate-400">
+                    <FileText className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">এখনো কোনো script নেই</p>
+                    <Link href="/dashboard/writer-pro" className="text-xs text-purple-600 hover:underline mt-1 inline-block">প্রথম script বানান →</Link>
                   </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-sm">5 Tips for Better Sleep</h4>
-                    <p className="text-xs text-muted-foreground">Reel • 2 hours ago</p>
-                  </div>
-                  <Badge variant="secondary">Draft</Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
+                )}
+              </div>
+            </CardContent>
         </Card>
 
         {/* Upcoming Posts */}
@@ -242,48 +274,40 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Brand Score */}
+        {/* Usage Score Card */}
         <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-blue-600" />
-              Brand Score
+              এই মাসের Progress
             </CardTitle>
-            <CardDescription>Your brand consistency score</CardDescription>
+            <CardDescription>আপনার মোট generation ব্যবহার</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-4xl font-bold text-blue-600 mb-1">87/100</div>
-                <p className="text-sm text-muted-foreground">Excellent consistency</p>
-              </div>
-              <div className="relative w-24 h-24">
-                <svg className="transform -rotate-90 w-24 h-24">
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="40"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                    fill="transparent"
-                    className="text-blue-200"
-                  />
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="40"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                    fill="transparent"
-                    strokeDasharray={`${87 * 2.51} 251`}
-                    className="text-blue-600"
-                  />
-                </svg>
-              </div>
-            </div>
-            <Link href="/dashboard/brand-brain">
+            {usage && (() => {
+              const limit = usage.limits.scripts_per_month;
+              const used = (usage.usage.scriptsGenerated || 0) + (usage.usage.hooksGenerated || 0);
+              const score = limit === -1 ? 100 : Math.min(Math.round((used / limit) * 100), 100);
+              const label = score < 30 ? 'শুরু হয়েছে' : score < 70 ? 'ভালো চলছে!' : score < 95 ? 'দারুণ!' : 'Limit শেষ!';
+              return (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-4xl font-bold text-blue-600 mb-1">{used}<span className="text-xl text-blue-400">/{limit === -1 ? '∞' : limit}</span></div>
+                    <p className="text-sm text-muted-foreground">{label}</p>
+                  </div>
+                  <div className="relative w-24 h-24">
+                    <svg className="transform -rotate-90 w-24 h-24">
+                      <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-blue-200" />
+                      <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent"
+                        strokeDasharray={`${Math.min(score, 100) * 2.51} 251`} className="text-blue-600 transition-all duration-700" />
+                    </svg>
+                  </div>
+                </div>
+              );
+            })()}
+            <Link href="/dashboard/billing">
               <Button variant="outline" size="sm" className="w-full mt-4">
-                View Brand Details
+                Usage Details দেখুন
               </Button>
             </Link>
           </CardContent>
@@ -340,8 +364,6 @@ function UsageCard({
   value,
   limit,
   icon,
-  trend,
-  trendUp,
   subtitle,
   bgColor,
 }: {
@@ -349,12 +371,12 @@ function UsageCard({
   value: number;
   limit: number;
   icon: React.ReactNode;
-  trend: string;
-  trendUp: boolean;
   subtitle: string;
   bgColor: string;
 }) {
-  const percentage = Math.min((value / limit) * 100, 100);
+  const isUnlimited = limit === -1;
+  const percentage = isUnlimited ? 0 : Math.min((value / limit) * 100, 100);
+  const isWarning = !isUnlimited && percentage >= 80;
 
   return (
     <Card className={`bg-gradient-to-br ${bgColor} border-0 shadow-sm hover:shadow-md transition-shadow`}>
@@ -363,10 +385,11 @@ function UsageCard({
           <div className="p-3 bg-white rounded-lg shadow-sm">
             {icon}
           </div>
-          <Badge variant="secondary" className="bg-white/80">
-            <ArrowUp className="h-3 w-3 mr-1" />
-            {trend}
-          </Badge>
+          {isWarning && (
+            <Badge variant="secondary" className="bg-red-100 text-red-600 text-xs">
+              সীমা কাছে!
+            </Badge>
+          )}
         </div>
         <div>
           <p className="text-sm text-muted-foreground mb-1">{title}</p>
@@ -375,15 +398,20 @@ function UsageCard({
         </div>
         <div className="mt-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-            <span>Progress</span>
-            <span>{value}/{limit}</span>
+            <span>ব্যবহার</span>
+            <span>{value} / {isUnlimited ? '∞' : limit}</span>
           </div>
-          <div className="h-2 bg-white/50 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-purple-600 to-blue-600 transition-all duration-300"
-              style={{ width: `${percentage}%` }}
-            />
-          </div>
+          {!isUnlimited && (
+            <div className="h-2 bg-white/50 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 ${isWarning ? 'bg-red-400' : 'bg-gradient-to-r from-purple-600 to-blue-600'}`}
+                style={{ width: `${percentage}%` }}
+              />
+            </div>
+          )}
+          {isUnlimited && (
+            <div className="h-2 bg-gradient-to-r from-purple-300 to-blue-300 rounded-full" />
+          )}
         </div>
       </CardContent>
     </Card>

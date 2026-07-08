@@ -32,6 +32,7 @@ export function AdCreativeGenerator() {
     goal: 'sales',
     platform: 'facebook',
     adFormat: 'single-image',
+    language: 'bangla',
   });
   const [generating, setGenerating] = useState(false);
   const [results, setResults] = useState<AdCreative[]>([]);
@@ -57,6 +58,25 @@ export function AdCreativeGenerator() {
     } finally {
       setGenerating(false);
     }
+  };
+
+  const copyToClipboard = (ad: AdCreative) => {
+    const text = `
+Ad Concept: ${ad.headline}
+Description: ${ad.description}
+Format: ${ad.type}
+
+--- COPY ---
+Hook: ${ad.copyElements.hook}
+Body: ${ad.copyElements.body}
+CTA: ${ad.copyElements.cta}
+
+--- VISUALS ---
+Concept: ${ad.visualConcept}
+Design Notes: ${ad.designNotes.join(' | ')}
+Targeting: ${ad.targetingNotes}
+    `.trim();
+    navigator.clipboard.writeText(text);
   };
 
   return (
@@ -146,6 +166,40 @@ export function AdCreativeGenerator() {
               </select>
             </div>
 
+            {/* Language */}
+            <div>
+              <label className="text-sm font-medium">Language Output</label>
+              <div className="grid grid-cols-3 gap-2 mt-1">
+                <Button
+                  type="button"
+                  variant={formData.language === 'bangla' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'bangla' })}
+                  className={formData.language === 'bangla' ? 'bg-pink-600 hover:bg-pink-700' : ''}
+                >
+                  বাংলা
+                </Button>
+                <Button
+                  type="button"
+                  variant={formData.language === 'english' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'english' })}
+                  className={formData.language === 'english' ? 'bg-pink-600 hover:bg-pink-700' : ''}
+                >
+                  English
+                </Button>
+                <Button
+                  type="button"
+                  variant={formData.language === 'banglish' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'banglish' })}
+                  className={formData.language === 'banglish' ? 'bg-pink-600 hover:bg-pink-700' : ''}
+                >
+                  বাংলিশ
+                </Button>
+              </div>
+            </div>
+
             <Button
               onClick={handleGenerate}
               disabled={generating || !formData.product || !formData.offer || !formData.targetAudience}
@@ -202,9 +256,16 @@ export function AdCreativeGenerator() {
                       {ad.conversionScore}/100
                     </Badge>
                   </div>
-                  <CardTitle className="text-lg">{ad.headline}</CardTitle>
                   <CardDescription className="mt-1">{ad.description}</CardDescription>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => copyToClipboard(ad)}
+                  title="Copy to clipboard"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
               </div>
             </CardHeader>
 

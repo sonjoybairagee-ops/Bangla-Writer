@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Calendar, Download } from 'lucide-react';
+import { Calendar, Download, Copy, Check } from 'lucide-react';
 
 export default function ContentPlannerPage() {
   const [brands, setBrands] = useState<any[]>([]);
@@ -20,9 +20,11 @@ export default function ContentPlannerPage() {
     tone: 'friendly',
     audience: '',
     brandId: '',
+    language: 'bangla',
   });
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [copiedDay, setCopiedDay] = useState<number | null>(null);
 
   useEffect(() => {
     fetchBrands();
@@ -72,6 +74,19 @@ export default function ContentPlannerPage() {
     } finally {
       setGenerating(false);
     }
+  };
+
+  const copyDayContent = (day: any, index: number) => {
+    const text = `
+Day ${day.day} - ${day.platform} (${day.contentType})
+Topic: ${day.topic}
+
+Idea: ${day.idea}
+${day.hook ? `Hook: ${day.hook}\n` : ''}${day.cta ? `CTA: ${day.cta}\n` : ''}
+    `.trim();
+    navigator.clipboard.writeText(text);
+    setCopiedDay(index);
+    setTimeout(() => setCopiedDay(null), 2000);
   };
 
   return (
@@ -193,6 +208,40 @@ export default function ContentPlannerPage() {
                   setFormData({ ...formData, audience: e.target.value })
                 }
               />
+            </div>
+
+            {/* Language */}
+            <div>
+              <label className="text-sm font-medium">Language Output</label>
+              <div className="grid grid-cols-3 gap-2 mt-1">
+                <Button
+                  type="button"
+                  variant={formData.language === 'bangla' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'bangla' })}
+                  className={formData.language === 'bangla' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+                >
+                  বাংলা
+                </Button>
+                <Button
+                  type="button"
+                  variant={formData.language === 'english' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'english' })}
+                  className={formData.language === 'english' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+                >
+                  English
+                </Button>
+                <Button
+                  type="button"
+                  variant={formData.language === 'banglish' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'banglish' })}
+                  className={formData.language === 'banglish' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+                >
+                  বাংলিশ
+                </Button>
+              </div>
             </div>
 
             <Button
@@ -447,6 +496,18 @@ export default function ContentPlannerPage() {
                             </p>
                           )}
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="flex-shrink-0"
+                          onClick={() => copyDayContent(day, index)}
+                        >
+                          {copiedDay === index ? (
+                            <Check className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
