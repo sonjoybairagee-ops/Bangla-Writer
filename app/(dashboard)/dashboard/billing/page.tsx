@@ -75,7 +75,14 @@ export default function BillingPage() {
 
   const handleUpgrade = async (planId: string) => {
     setCheckingOut(planId);
+    
     try {
+      // For now, show a message about payment setup
+      // TODO: Integrate with actual payment gateway (SSLCommerz/bKash)
+      
+      alert(`Plan upgrade feature coming soon!\n\nYou selected: ${PRICING_PLANS[planId as keyof typeof PRICING_PLANS].name}\nPrice: ৳${billing === 'monthly' ? PRICING_PLANS[planId as keyof typeof PRICING_PLANS].prices.BDT : getYearlyMonthly(PRICING_PLANS[planId as keyof typeof PRICING_PLANS].prices.BDT)}/month\n\nPayment integration with bKash/SSLCommerz will be added soon.`);
+      
+      /* PAYMENT INTEGRATION - TO BE IMPLEMENTED
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -83,8 +90,10 @@ export default function BillingPage() {
       });
       const data = await res.json();
       if (data.checkoutUrl) window.location.href = data.checkoutUrl;
-    } catch {
-      alert('Failed to start checkout');
+      */
+    } catch (error) {
+      alert('Failed to start checkout. Please try again.');
+      console.error('Checkout error:', error);
     } finally {
       setCheckingOut(null);
     }

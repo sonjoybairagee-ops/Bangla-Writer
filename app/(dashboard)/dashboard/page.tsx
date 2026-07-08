@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,15 +23,26 @@ import {
   Palette,
   Plus,
   ArrowUp,
+  X,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 export default function DashboardPage() {
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const error = searchParams?.get('error');
+  
   const [usage, setUsage] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [recentScripts, setRecentScripts] = useState<any[]>([]);
+  const [showError, setShowError] = useState(false);
+
+  useEffect(() => {
+    if (error === 'admin_access_denied') {
+      setShowError(true);
+    }
+  }, [error]);
 
   useEffect(() => {
     fetchUsage();
@@ -68,6 +80,26 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {/* Error Banner */}
+      {showError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start justify-between">
+          <div className="flex-1">
+            <h3 className="text-red-800 font-semibold mb-1">
+              🚫 Admin Access Denied
+            </h3>
+            <p className="text-red-600 text-sm">
+              You don't have permission to access the Admin Panel. Only administrators can access that section.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowError(false)}
+            className="text-red-400 hover:text-red-600 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      )}
+
       {/* Hero Section with Gradient */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 p-8 text-white shadow-xl">
         <div className="relative z-10">
@@ -125,7 +157,7 @@ export default function DashboardPage() {
           >
             <Search className="absolute left-3 h-5 w-5 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="AI-কে বলুন... (যেমন: hook বানাও, ৩০ দিনের plan, skincare ad লেখো)"
+              placeholder="Tell AI what you need... (e.g., create hook, 30-day plan, write skincare ad)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-28 h-12 text-base border-0 focus-visible:ring-0"
@@ -165,7 +197,7 @@ export default function DashboardPage() {
               value={usage.usage.scriptsGenerated}
               limit={usage.limits.scripts_per_month}
               icon={<FileText className="h-6 w-6 text-purple-600" />}
-              subtitle="এই মাসে"
+              subtitle="this month"
               bgColor="from-purple-50 to-purple-100"
             />
             <UsageCard
@@ -173,7 +205,7 @@ export default function DashboardPage() {
               value={usage.usage.hooksGenerated}
               limit={usage.limits.hooks_per_month}
               icon={<Zap className="h-6 w-6 text-yellow-600" />}
-              subtitle="এই মাসে"
+              subtitle="this month"
               bgColor="from-yellow-50 to-yellow-100"
             />
             <UsageCard
@@ -181,7 +213,7 @@ export default function DashboardPage() {
               value={usage.usage.contentPlansCreated}
               limit={usage.limits.content_plans}
               icon={<Calendar className="h-6 w-6 text-green-600" />}
-              subtitle="এই মাসে"
+              subtitle="this month"
               bgColor="from-green-50 to-green-100"
             />
             <UsageCard
@@ -189,7 +221,7 @@ export default function DashboardPage() {
               value={usage.usage.ovcScenesGenerated}
               limit={usage.limits.ovc_scenes}
               icon={<Film className="h-6 w-6 text-blue-600" />}
-              subtitle="এই মাসে"
+              subtitle="this month"
               bgColor="from-blue-50 to-blue-100"
             />
           </div>
@@ -233,8 +265,8 @@ export default function DashboardPage() {
                 )) : (
                   <div className="text-center py-8 text-slate-400">
                     <FileText className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                    <p className="text-sm">এখনো কোনো script নেই</p>
-                    <Link href="/dashboard/writer-pro" className="text-xs text-purple-600 hover:underline mt-1 inline-block">প্রথম script বানান →</Link>
+                    <p className="text-sm">No scripts yet</p>
+                    <Link href="/dashboard/writer-pro" className="text-xs text-purple-600 hover:underline mt-1 inline-block">Create your first script →</Link>
                   </div>
                 )}
               </div>
@@ -279,9 +311,9 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-blue-600" />
-              এই মাসের Progress
+              This Month's Progress
             </CardTitle>
-            <CardDescription>আপনার মোট generation ব্যবহার</CardDescription>
+            <CardDescription>Your total generation usage</CardDescription>
           </CardHeader>
           <CardContent>
             {usage && (() => {

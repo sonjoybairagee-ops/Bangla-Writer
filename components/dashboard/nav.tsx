@@ -110,12 +110,6 @@ const navSections = [
         href: '/dashboard/billing',
         icon: CreditCard,
       },
-      {
-        title: 'Admin Panel',
-        href: '/admin',
-        icon: Shield,
-        badge: 'ADMIN',
-      },
     ],
   },
 ];
