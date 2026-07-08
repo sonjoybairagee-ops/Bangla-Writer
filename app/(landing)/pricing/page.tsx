@@ -65,11 +65,22 @@ const PLAN_STYLE: Record<string, {
 
 // Trust badges array
 const TRUST_BADGES = [
-  { icon: Shield, title: '30 Day Money Back', sub: 'Risk-free trial' },
-  { icon: Clock, title: '24 Hour Activation', sub: 'Instant start' },
-  { icon: RefreshCcw, title: 'Cancel Anytime', sub: 'No commitments' },
-  { icon: Wallet, title: 'bKash Send Money', sub: 'Easy payment' },
+  { type: 'shield', title: '30 Day Money Back', sub: 'Risk-free trial' },
+  { type: 'clock', title: '24 Hour Activation', sub: 'Instant start' },
+  { type: 'refresh', title: 'Cancel Anytime', sub: 'No commitments' },
+  { type: 'wallet', title: 'bKash Send Money', sub: 'Easy payment' },
 ];
+
+// Helper to get icon component
+function getTrustBadgeIcon(type: string) {
+  switch (type) {
+    case 'shield': return Shield;
+    case 'clock': return Clock;
+    case 'refresh': return RefreshCcw;
+    case 'wallet': return Wallet;
+    default: return Shield;
+  }
+}
 
 export default function PricingPage() {
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
@@ -238,7 +249,7 @@ export default function PricingPage() {
         {/* ── Trust Badges ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
           {TRUST_BADGES.map((badge, index) => {
-            const IconComponent = badge.icon;
+            const IconComponent = getTrustBadgeIcon(badge.type);
             return (
               <div key={index} className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-sm hover:shadow-md transition-shadow">
                 <div className="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center">
