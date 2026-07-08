@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { generateAIResponse } from '@/lib/ai/openai';
+import { generateText } from '@/lib/ai/openai';
 
 export async function POST(request: NextRequest) {
   try {
