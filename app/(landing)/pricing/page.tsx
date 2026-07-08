@@ -132,7 +132,7 @@ export default function PricingPage() {
 
         {/* ── Pricing Grid ── */}
         <div className="grid md:grid-cols-3 gap-6 mb-10">
-          {Object.entries(PRICING_PLANS).map(([planId, plan]) => {
+          {Object.entries(PRICING_PLANS).filter(([planId]) => planId !== 'free').map(([planId, plan]) => {
             const style = PLAN_STYLE[planId];
             const Icon = style.icon;
             const isPopular = !!(plan as any).popular;
