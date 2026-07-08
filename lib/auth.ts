@@ -38,10 +38,12 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials');
         }
 
+        /* EMAIL VERIFICATION DISABLED
         // ✅ Block unverified users
         if (!user.emailVerified) {
           throw new Error('EMAIL_NOT_VERIFIED');
         }
+        */
 
         const isCorrectPassword = await bcrypt.compare(
           credentials.password,

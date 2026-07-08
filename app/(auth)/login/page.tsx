@@ -30,11 +30,14 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
+        /* EMAIL VERIFICATION DISABLED
         if (result.error === 'EMAIL_NOT_VERIFIED') {
           setError('EMAIL_NOT_VERIFIED');
         } else {
           setError('ইমেইল বা পাসওয়ার্ড ভুল।');
         }
+        */
+        setError('ইমেইল বা পাসওয়ার্ড ভুল।');
       } else {
         router.push('/dashboard');
         router.refresh();
@@ -63,6 +66,7 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* EMAIL VERIFICATION WARNING DISABLED
             {error && (
               error === 'EMAIL_NOT_VERIFIED' ? (
                 <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-md text-sm">
@@ -80,6 +84,12 @@ export default function LoginPage() {
                   {error}
                 </div>
               )
+            )}
+            */}
+            {error && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+                {error}
+              </div>
             )}
 
             <div className="space-y-2">
