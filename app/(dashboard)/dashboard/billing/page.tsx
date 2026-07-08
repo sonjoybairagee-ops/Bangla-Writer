@@ -141,7 +141,7 @@ export default function BillingPage() {
                 : 'text-slate-500 hover:text-slate-700'
             }`}
           >
-            মাসিক
+            Monthly
           </button>
           <button
             id="toggle-yearly"
@@ -152,9 +152,9 @@ export default function BillingPage() {
                 : 'text-slate-500 hover:text-slate-700'
             }`}
           >
-            বার্ষিক
+            Yearly
             <span className="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-0.5 rounded-full">
-              20% ছাড়
+              20% OFF
             </span>
           </button>
         </div>
@@ -221,20 +221,20 @@ export default function BillingPage() {
                 {billing === 'yearly' ? (
                   <div className="space-y-1 mt-2">
                     <p className="text-sm text-green-600 font-semibold">
-                      বার্ষিক মোট: ৳{getYearlyTotal(bdtMonthly).toLocaleString('en-BD')}
+                      Yearly total: ৳{getYearlyTotal(bdtMonthly).toLocaleString('en-BD')}
                     </p>
                     <p className="text-xs text-slate-400 line-through">
-                      মাসিকে ৳{getOriginalYearlyTotal(bdtMonthly).toLocaleString('en-BD')} হতো
+                      Was ৳{getOriginalYearlyTotal(bdtMonthly).toLocaleString('en-BD')}
                     </p>
                     <span className="inline-block bg-green-50 border border-green-200 text-green-700 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                      ৳{(getOriginalYearlyTotal(bdtMonthly) - getYearlyTotal(bdtMonthly)).toLocaleString('en-BD')} সাশ্রয়!
+                      Save ৳{(getOriginalYearlyTotal(bdtMonthly) - getYearlyTotal(bdtMonthly)).toLocaleString('en-BD')}!
                     </span>
                   </div>
                 ) : (
                   <p className="text-xs text-slate-400 mt-1">
-                    বার্ষিকে{' '}
+                    Yearly{' '}
                     <span className="text-green-600 font-semibold">
-                      ৳{getYearlyMonthly(bdtMonthly).toLocaleString('en-BD')}/মাস (20% ছাড়)
+                      ৳{getYearlyMonthly(bdtMonthly).toLocaleString('en-BD')}/month (20% OFF)
                     </span>
                   </p>
                 )}
@@ -271,7 +271,7 @@ export default function BillingPage() {
                     {checkingOut === planId ? (
                       <span className="flex items-center justify-center gap-2">
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        প্রসেস হচ্ছে...
+                        Processing...
                       </span>
                     ) : (
                       `Subscribe ${plan.name}`
@@ -287,10 +287,10 @@ export default function BillingPage() {
       {/* ── Trust Badges ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-2">
         {[
-          { icon: Shield,      title: '৩০ দিন মানি ব্যাক',       sub: 'রিস্ক ফ্রি ট্রায়াল' },
-          { icon: Clock,       title: '২৪ ঘণ্টা অ্যাক্টিভেশন',  sub: 'তাৎক্ষণিক শুরু' },
-          { icon: RefreshCcw,  title: 'যেকোনো সময় বাতিল',        sub: 'Anytime Cancel' },
-          { icon: Wallet,      title: 'bKash Send Money',          sub: 'Sender number: 01909...' },
+          { icon: Shield,      title: '30 Day Money Back',       sub: 'Risk-free trial' },
+          { icon: Clock,       title: '24 Hour Activation',  sub: 'Instant start' },
+          { icon: RefreshCcw,  title: 'Cancel Anytime',        sub: 'No commitment' },
+          { icon: Wallet,      title: 'bKash Send Money',          sub: 'Easy payment' },
         ].map(({ icon: Ic, title, sub }) => (
           <div key={title} className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-sm hover:shadow-md transition-shadow">
             <div className="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center">
@@ -305,12 +305,12 @@ export default function BillingPage() {
       {/* ── Current Subscription Card ── */}
       {usage?.subscription && (
         <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-6 px-2">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">আপনার বর্তমান সাবস্ক্রিপশন</h2>
+          <h2 className="text-lg font-bold text-slate-900 mb-4">Your Current Subscription</h2>
           <div className="grid md:grid-cols-3 gap-4">
             {[
-              { label: 'স্ট্যাটাস', value: usage.subscription.status },
-              { label: 'মেয়াদ শেষ', value: formatDate(usage.subscription.currentPeriodEnd) },
-              { label: 'প্ল্যান', value: PRICING_PLANS[currentPlan as keyof typeof PRICING_PLANS]?.name || 'Free' },
+              { label: 'Status', value: usage.subscription.status },
+              { label: 'Expires', value: formatDate(usage.subscription.currentPeriodEnd) },
+              { label: 'Plan', value: PRICING_PLANS[currentPlan as keyof typeof PRICING_PLANS]?.name || 'Free' },
             ].map(({ label, value }) => (
               <div key={label}>
                 <div className="text-xs text-slate-500 mb-1 uppercase tracking-wide">{label}</div>
@@ -323,12 +323,12 @@ export default function BillingPage() {
 
       {/* ── Usage This Month ── */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-        <h2 className="text-lg font-bold text-slate-900 mb-5">এই মাসের ব্যবহার</h2>
+        <h2 className="text-lg font-bold text-slate-900 mb-5">This Month's Usage</h2>
         <div className="space-y-4">
-          <UsageBar label="স্ক্রিপ্ট / জেনারেশন"  current={usage?.usage.scriptsGenerated || 0}  limit={usage?.limits.scripts_per_month || 0} />
-          <UsageBar label="হুক জেনারেটেড"          current={usage?.usage.hooksGenerated || 0}    limit={usage?.limits.hooks_per_month || 0} />
-          <UsageBar label="কন্টেন্ট প্ল্যান"        current={usage?.usage.contentPlansCreated || 0} limit={usage?.limits.content_plans || 0} />
-          <UsageBar label="OVC সিন"                 current={usage?.usage.ovcScenesGenerated || 0} limit={usage?.limits.ovc_scenes || 0} />
+          <UsageBar label="Scripts / Generation"  current={usage?.usage.scriptsGenerated || 0}  limit={usage?.limits.scripts_per_month || 0} />
+          <UsageBar label="Hooks Generated"          current={usage?.usage.hooksGenerated || 0}    limit={usage?.limits.hooks_per_month || 0} />
+          <UsageBar label="Content Plans"        current={usage?.usage.contentPlansCreated || 0} limit={usage?.limits.content_plans || 0} />
+          <UsageBar label="OVC Scenes"                 current={usage?.usage.ovcScenesGenerated || 0} limit={usage?.limits.ovc_scenes || 0} />
         </div>
       </div>
 
