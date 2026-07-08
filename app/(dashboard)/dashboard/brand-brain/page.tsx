@@ -759,11 +759,19 @@ function CreateBrandForm({
         }));
         alert('Brand information extracted successfully!');
       } else {
-        alert(data.error || 'Failed to scrape website');
+        // More detailed error message
+        const errorMsg = data.error || 'Failed to scrape website';
+        const details = data.details ? `\n\nDetails: ${data.details}` : '';
+        
+        if (errorMsg.includes('API key')) {
+          alert(`⚠️ OpenAI API Key Missing!\n\nPlease add OPENAI_API_KEY to your .env file to use AI features.\n\nGet your API key from: https://platform.openai.com/api-keys${details}`);
+        } else {
+          alert(`❌ ${errorMsg}${details}`);
+        }
       }
     } catch (error) {
       console.error('Failed to scrape website:', error);
-      alert('Failed to extract brand information from website');
+      alert('❌ Network error: Failed to connect to the scraping service. Please check your internet connection and try again.');
     } finally {
       setScrapingWebsite(false);
     }

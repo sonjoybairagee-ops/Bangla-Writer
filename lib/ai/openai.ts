@@ -61,9 +61,21 @@ export async function generateJSON<T = any>(
 
     const content = response.choices[0]?.message?.content || '{}';
     return JSON.parse(content);
-  } catch (error) {
+  } catch (error: any) {
     console.error('OpenAI JSON error:', error);
-    throw new Error('Failed to generate AI content');
+    
+    // More specific error messages
+    if (error?.error?.code === 'invalid_api_key') {
+      throw new Error('Invalid OpenAI API key. Please check your configuration.');
+    }
+    if (error?.error?.code === 'insufficient_quota') {
+      throw new Error('OpenAI API quota exceeded. Please check your billing.');
+    }
+    if (error?.message?.includes('timeout')) {
+      throw new Error('OpenAI request timed out. Please try again.');
+    }
+    
+    throw new Error(`Failed to generate AI content: ${error?.message || 'Unknown error'}`);
   }
 }
 

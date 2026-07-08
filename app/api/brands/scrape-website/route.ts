@@ -123,10 +123,27 @@ If any information is not found, use empty string or empty array. Be concise and
         website: websiteUrl.toString(),
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Website scraping error:', error);
+    
+    // More detailed error messages
+    let errorMessage = 'Failed to extract brand information from website';
+    
+    if (error.message?.includes('API key')) {
+      errorMessage = 'OpenAI API key not configured. Please check your .env file.';
+    } else if (error.message?.includes('fetch')) {
+      errorMessage = 'Failed to fetch website content. Please check the URL and try again.';
+    } else if (error.message?.includes('timeout')) {
+      errorMessage = 'Website request timed out. Please try again.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to extract brand information from website' },
+      { 
+        error: errorMessage,
+        details: error.message || 'Unknown error occurred'
+      },
       { status: 500 }
     );
   }
