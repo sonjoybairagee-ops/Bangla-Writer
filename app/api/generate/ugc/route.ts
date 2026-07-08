@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { generateJSON } from '@/lib/ai/openai';
-import { createUGCPrompt } from '@/lib/ai/prompts/creative-studio';
+import { createUGCPrompt } from '@/lib/ai/prompts/creative-studio.js';
 
 export async function POST(req: NextRequest) {
   try {
