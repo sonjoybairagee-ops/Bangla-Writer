@@ -1,109 +1,79 @@
-import OpenAI from 'openai';
+/**
+ * AI Router with Multi-Provider Support
+ * Automatically routes to best available provider with fallback
+ */
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { generateText, generateJSON as generateJSONRouter, generateStream } from './providers';
 
+/**
+ * Generate text completion with automatic provider fallback
+ * @deprecated Use generateText from providers for better control
+ */
 export async function generateCompletion(
   prompt: string,
   options: {
     model?: string;
     temperature?: number;
     maxTokens?: number;
+    provider?: 'openai' | 'grok' | 'gemini' | 'claude' | 'auto';
   } = {}
 ): Promise<string> {
-  const {
-    model = 'gpt-4o-mini',
-    temperature = 0.7,
-    maxTokens = 2000,
-  } = options;
-
   try {
-    const response = await openai.chat.completions.create({
-      model,
-      messages: [{ role: 'user', content: prompt }],
-      temperature,
-      max_tokens: maxTokens,
-    });
-
-    return response.choices[0]?.message?.content || '';
-  } catch (error) {
-    console.error('OpenAI error:', error);
-    throw new Error('Failed to generate AI content');
+    const response = await generateText(prompt, options);
+    return response.text;
+  } catch (error: any) {
+    console.error('AI generation error:', error);
+    throw new Error(error.message || 'Failed to generate AI content');
   }
 }
 
+/**
+ * Generate JSON with automatic provider fallback
+ */
 export async function generateJSON<T = any>(
   prompt: string,
   options: {
     model?: string;
     temperature?: number;
+    provider?: 'openai' | 'grok' | 'gemini' | 'claude' | 'auto';
   } = {}
 ): Promise<T> {
-  const {
-    model = 'gpt-4o-mini',
-    temperature = 0.7,
-  } = options;
-
   try {
-    const response = await openai.chat.completions.create({
-      model,
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a helpful assistant that always responds with valid JSON.',
-        },
-        { role: 'user', content: prompt },
-      ],
-      temperature,
-      response_format: { type: 'json_object' },
-    });
-
-    const content = response.choices[0]?.message?.content || '{}';
-    return JSON.parse(content);
+    return await generateJSONRouter<T>(prompt, options);
   } catch (error: any) {
-    console.error('OpenAI JSON error:', error);
-    
-    // More specific error messages
-    if (error?.error?.code === 'invalid_api_key') {
-      throw new Error('Invalid OpenAI API key. Please check your configuration.');
-    }
-    if (error?.error?.code === 'insufficient_quota') {
-      throw new Error('OpenAI API quota exceeded. Please check your billing.');
-    }
-    if (error?.message?.includes('timeout')) {
-      throw new Error('OpenAI request timed out. Please try again.');
-    }
-    
-    throw new Error(`Failed to generate AI content: ${error?.message || 'Unknown error'}`);
+    console.error('AI JSON generation error:', error);
+    throw new Error(error.message || 'Failed to generate AI content');
   }
 }
 
+/**
+ * Generate streaming response
+ */
 export async function generateStreamCompletion(
   prompt: string,
   options: {
     model?: string;
     temperature?: number;
+    provider?: 'openai' | 'grok' | 'gemini' | 'claude' | 'auto';
   } = {}
 ) {
-  const {
-    model = 'gpt-4o-mini',
-    temperature = 0.7,
-  } = options;
-
   try {
-    const stream = await openai.chat.completions.create({
-      model,
-      messages: [{ role: 'user', content: prompt }],
-      temperature,
-      stream: true,
-    });
-
-    return stream;
-  } catch (error) {
-    console.error('OpenAI stream error:', error);
-    throw new Error('Failed to generate AI content');
+    return await generateStream(prompt, options);
+  } catch (error: any) {
+    console.error('AI stream generation error:', error);
+    throw new Error(error.message || 'Failed to generate AI content');
   }
 }
 
-export { openai };
+// Re-export provider utilities
+export {
+  generateText,
+  generateJSON as generateJSONDirect,
+  generateStream,
+  getAvailableProviders,
+  getProviderStatus,
+  getBestProvider,
+} from './providers';
+
+// For backward compatibility
+export { generateText as openai };
