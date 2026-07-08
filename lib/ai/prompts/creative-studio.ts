@@ -1,18 +1,10 @@
 // @ts-nocheck
+/* eslint-disable */
 // ==========================================
 // THUMBNAIL GENERATOR PROMPT
 // ==========================================
 
-interface ThumbnailParams {
-  videoTitle: string;
-  videoTopic: string;
-  targetAudience: string;
-  platform: string;
-  style: string;
-  emotion: string;
-}
-
-export function createThumbnailPrompt(params: ThumbnailParams): string {
+export function createThumbnailPrompt(params) {
   return `
 You are a professional thumbnail designer who creates high-CTR (click-through rate) thumbnail concepts.
 
@@ -124,16 +116,7 @@ Return ONLY the JSON object, no explanations.
 // AD CREATIVE GENERATOR PROMPT
 // ==========================================
 
-interface AdCreativeParams {
-  product: string;
-  offer: string;
-  targetAudience: string;
-  goal: string;
-  platform: string;
-  adFormat: string;
-}
-
-export function createAdCreativePrompt(params: AdCreativeParams): string {
+export function createAdCreativePrompt(params) {
   return `
 You are an expert performance marketer creating scroll-stopping ad creative concepts.
 
@@ -238,14 +221,7 @@ Return ONLY the JSON object.
 // UGC SCRIPT GENERATOR PROMPT
 // ==========================================
 
-interface UGCParams {
-  product: string;
-  benefit: string;
-  targetAudience: string;
-  ugcType: string;
-}
-
-export function createUGCPrompt(params: UGCParams): string {
+export function createUGCPrompt(params) {
   return `
 You are a UGC (user-generated content) script writer creating authentic, relatable video scripts.
 
@@ -352,13 +328,7 @@ Return ONLY the JSON object.
 // VISUAL HOOK GENERATOR PROMPT
 // ==========================================
 
-interface VisualHookParams {
-  topic: string;
-  platform: string;
-  emotion: string;
-}
-
-export function createVisualHookPrompt(params: VisualHookParams): string {
+export function createVisualHookPrompt(params) {
   return `
 You are a viral content strategist creating scroll-stopping visual hook concepts.
 
@@ -477,14 +447,7 @@ Return ONLY the JSON object.
 // MOODBOARD CREATOR PROMPT
 // ==========================================
 
-interface MoodboardParams {
-  projectName: string;
-  projectDescription: string;
-  targetMood: string;
-  industry: string;
-}
-
-export function createMoodboardPrompt(params: MoodboardParams): string {
+export function createMoodboardPrompt(params) {
   return `
 You are a brand designer creating a comprehensive moodboard for a project.
 
@@ -635,8 +598,8 @@ Return ONLY the JSON object.
 // HELPER FUNCTIONS
 // ==========================================
 
-function getThumbnailStyleGuidelines(style: string): string {
-  const guidelines: Record<string, string> = {
+function getThumbnailStyleGuidelines(style) {
+  const guidelines = {
     'bold': 'High contrast, saturated colors, large text, dramatic shadows, intense expressions',
     'minimal': 'Clean backgrounds, 1-2 colors, simple fonts, lots of white space, understated elegance',
     'dramatic': 'Dark backgrounds, high contrast lighting, intense expressions, cinematic feel',
@@ -647,8 +610,8 @@ function getThumbnailStyleGuidelines(style: string): string {
   return guidelines[style] || 'Follow best practices for engaging thumbnails';
 }
 
-function getThumbnailEmotionGuidelines(emotion: string): string {
-  const guidelines: Record<string, string> = {
+function getThumbnailEmotionGuidelines(emotion) {
+  const guidelines = {
     'curiosity': 'Ask question in text, show partial result, create information gap, use "How?" or "Why?"',
     'excitement': 'Bright colors, energetic expressions, exclamation marks, celebration visuals',
     'shock': 'Surprised expressions, unexpected visuals, "WAIT" or "WHAT" text, pattern interrupts',
@@ -659,8 +622,8 @@ function getThumbnailEmotionGuidelines(emotion: string): string {
   return guidelines[emotion] || 'Create emotional connection through visual and text';
 }
 
-function getPlatformThumbnailRules(platform: string): string {
-  const rules: Record<string, string> = {
+function getPlatformThumbnailRules(platform) {
+  const rules = {
     'youtube': 'Optimize for 1280x720px, test at small size (150px wide), text must be huge',
     'facebook': 'Square 1:1 ratio works best in feed, text overlay important for sound-off viewing',
     'instagram': 'Square or 9:16 vertical, bright colors stand out in feed, minimal text',
@@ -670,8 +633,8 @@ function getPlatformThumbnailRules(platform: string): string {
   return rules[platform] || 'Follow platform best practices';
 }
 
-function getAdGoalGuidelines(goal: string): string {
-  const guidelines: Record<string, string> = {
+function getAdGoalGuidelines(goal) {
+  const guidelines = {
     'sales': 'Strong CTA, clear offer, urgency/scarcity, product benefits, social proof',
     'leads': 'Form/landing page focus, lead magnet value, low friction CTA, trust signals',
     'awareness': 'Brand story, emotional connection, shareable content, broad appeal',
@@ -681,8 +644,8 @@ function getAdGoalGuidelines(goal: string): string {
   return guidelines[goal] || 'Optimize for conversions';
 }
 
-function getAdPlatformGuidelines(platform: string): string {
-  const guidelines: Record<string, string> = {
+function getAdPlatformGuidelines(platform) {
+  const guidelines = {
     'facebook': 'First 3 seconds critical, mobile-first, video preferred, carousel for products',
     'instagram': 'Visual-first, aesthetic matters, Stories for urgency, Feed for consideration',
     'google': 'Banner ads need clear message instantly, display network = interruptive',
@@ -692,8 +655,8 @@ function getAdPlatformGuidelines(platform: string): string {
   return guidelines[platform] || 'Platform-optimized creative';
 }
 
-function getAdFormatGuidelines(format: string): string {
-  const guidelines: Record<string, string> = {
+function getAdFormatGuidelines(format) {
+  const guidelines = {
     'single-image': 'One clear focal point, text overlay for clarity, high quality image',
     'carousel': '3-5 cards, each tells part of story, swipe-worthy progression',
     'video': 'Hook in first 3 seconds, captions for sound-off, 15-30 seconds ideal',
@@ -703,8 +666,8 @@ function getAdFormatGuidelines(format: string): string {
   return guidelines[format] || 'Format-specific best practices';
 }
 
-function getUGCTypeGuidelines(type: string): string {
-  const guidelines: Record<string, string> = {
+function getUGCTypeGuidelines(type) {
+  const guidelines = {
     'testimonial': 'Personal transformation story, specific results, emotional journey, genuine reaction',
     'unboxing': 'Genuine excitement, show packaging details, first impressions, natural discovery',
     'review': 'Balanced perspective, specific features tested, pros and cons, recommendation',
@@ -714,8 +677,8 @@ function getUGCTypeGuidelines(type: string): string {
   return guidelines[type] || 'Authentic user perspective';
 }
 
-function getPlatformVisualRules(platform: string): string {
-  const rules: Record<string, string> = {
+function getPlatformVisualRules(platform) {
+  const rules = {
     'instagram': 'Vertical 9:16 for Reels, bright colors, fast cuts, trending audio',
     'tiktok': 'Native phone recording feel, trends/challenges, text overlays high up',
     'youtube': 'Horizontal 16:9 for main feed, vertical for Shorts, thumbnail matters',
@@ -724,8 +687,8 @@ function getPlatformVisualRules(platform: string): string {
   return rules[platform] || 'Platform-native format';
 }
 
-function getIndustryColorGuidelines(industry: string): string {
-  const guidelines: Record<string, string> = {
+function getIndustryColorGuidelines(industry) {
+  const guidelines = {
     'tech': 'Blues (trust), grays (sophistication), accent of bright color (innovation)',
     'health': 'Greens (wellness), whites (cleanliness), soft blues (trust)',
     'finance': 'Blues (trust), greens (money), blacks (luxury)',
