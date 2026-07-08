@@ -63,25 +63,6 @@ const PLAN_STYLE: Record<string, {
   },
 };
 
-// Trust badges array
-const TRUST_BADGES = [
-  { type: 'shield', title: '30 Day Money Back', sub: 'Risk-free trial' },
-  { type: 'clock', title: '24 Hour Activation', sub: 'Instant start' },
-  { type: 'refresh', title: 'Cancel Anytime', sub: 'No commitments' },
-  { type: 'wallet', title: 'bKash Send Money', sub: 'Easy payment' },
-];
-
-// Helper to get icon component
-function getTrustBadgeIcon(type: string) {
-  switch (type) {
-    case 'shield': return Shield;
-    case 'clock': return Clock;
-    case 'refresh': return RefreshCcw;
-    case 'wallet': return Wallet;
-    default: return Shield;
-  }
-}
-
 export default function PricingPage() {
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
 
@@ -248,18 +229,34 @@ export default function PricingPage() {
 
         {/* ── Trust Badges ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-          {TRUST_BADGES.map((badge, index) => {
-            const IconComponent = getTrustBadgeIcon(badge.type);
-            return (
-              <div key={index} className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-sm hover:shadow-md transition-shadow">
-                <div className="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center">
-                  <IconComponent className="w-5 h-5 text-purple-600" />
-                </div>
-                <p className="text-sm font-semibold text-slate-800">{badge.title}</p>
-                <p className="text-xs text-slate-400">{badge.sub}</p>
-              </div>
-            );
-          })}
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center">
+              <Shield className="w-5 h-5 text-purple-600" />
+            </div>
+            <p className="text-sm font-semibold text-slate-800">30 Day Money Back</p>
+            <p className="text-xs text-slate-400">Risk-free trial</p>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center">
+              <Clock className="w-5 h-5 text-purple-600" />
+            </div>
+            <p className="text-sm font-semibold text-slate-800">24 Hour Activation</p>
+            <p className="text-xs text-slate-400">Instant start</p>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center">
+              <RefreshCcw className="w-5 h-5 text-purple-600" />
+            </div>
+            <p className="text-sm font-semibold text-slate-800">Cancel Anytime</p>
+            <p className="text-xs text-slate-400">No commitments</p>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center">
+              <Wallet className="w-5 h-5 text-purple-600" />
+            </div>
+            <p className="text-sm font-semibold text-slate-800">bKash Send Money</p>
+            <p className="text-xs text-slate-400">Easy payment</p>
+          </div>
         </div>
 
         {/* FAQ Section */}
