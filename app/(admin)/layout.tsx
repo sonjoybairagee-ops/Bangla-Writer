@@ -10,14 +10,16 @@ export default async function AdminLayout({
 }) {
   const session = await getServerSession(authOptions);
 
-  // Check if user is authenticated and is admin
+  // Check if user is authenticated
   if (!session?.user?.email) {
-    redirect('/login');
+    redirect('/login?error=unauthorized');
   }
 
-  // Check if user has admin role (you need to fetch from database)
-  // For now, we'll allow all authenticated users to access admin
-  // TODO: Add proper role checking from database
+  // Check if user has admin role
+  if (session.user.role !== 'admin') {
+    // Redirect to dashboard if not admin
+    redirect('/dashboard?error=admin_access_denied');
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">

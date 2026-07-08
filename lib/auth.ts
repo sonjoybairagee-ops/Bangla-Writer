@@ -67,6 +67,13 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
+        
+        // Add user role to token
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { role: true },
+        });
+        token.role = dbUser?.role || 'user';
       }
 
       // Handle session update
@@ -79,6 +86,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
+        session.user.role = token.role as string; // Add role to session
       }
 
       // Get user's subscription status
