@@ -61,9 +61,9 @@ export default function ForgotPasswordPage() {
                   <div className="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Mail className="w-7 h-7 text-purple-600" />
                   </div>
-                  <h1 className="text-2xl font-bold text-slate-900 mb-2">পাসওয়ার্ড ভুলে গেছেন?</h1>
+                  <h1 className="text-2xl font-bold text-slate-900 mb-2">Forgot Password?</h1>
                   <p className="text-slate-500 text-sm">
-                    আপনার ইমেইল দিন — আমরা একটি reset link পাঠাবো।
+                    Enter your email and we'll send you a reset link.
                   </p>
                 </div>
 
@@ -76,7 +76,7 @@ export default function ForgotPasswordPage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                      ইমেইল ঠিকানা
+                      Email Address
                     </label>
                     <input
                       id="forgot-email"
@@ -98,12 +98,12 @@ export default function ForgotPasswordPage() {
                     {loading ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        পাঠানো হচ্ছে...
+                        Sending...
                       </>
                     ) : (
                       <>
                         <Mail className="w-4 h-4" />
-                        Reset Link পাঠান
+                        Send Reset Link
                       </>
                     )}
                   </button>
@@ -115,15 +115,15 @@ export default function ForgotPasswordPage() {
                 <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5">
                   <CheckCircle className="w-8 h-8 text-green-500" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900 mb-2">ইমেইল পাঠানো হয়েছে! ✉️</h2>
+                <h2 className="text-xl font-bold text-slate-900 mb-2">Email Sent! ✉️</h2>
                 <p className="text-slate-500 text-sm mb-6">
-                  <span className="font-semibold text-slate-700">{email}</span> এ একটি password reset link পাঠানো হয়েছে। Spam folder-ও চেক করুন।
+                  A password reset link has been sent to <span className="font-semibold text-slate-700">{email}</span>. Please check your spam folder too.
                 </p>
                 <button
                   onClick={() => { setSent(false); setEmail(''); }}
                   className="text-sm text-purple-600 hover:underline"
                 >
-                  অন্য ইমেইল দিয়ে চেষ্টা করুন
+                  Try another email
                 </button>
               </div>
             )}
@@ -135,7 +135,7 @@ export default function ForgotPasswordPage() {
                 className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-purple-600 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
-                লগইন পেজে ফিরে যান
+                Back to Login
               </Link>
             </div>
           </div>
