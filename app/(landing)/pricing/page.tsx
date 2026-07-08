@@ -247,7 +247,6 @@ export default function PricingPage() {
             );
           })}
         </div>
-        </div>
 
         {/* FAQ Section */}
         <div className="max-w-3xl mx-auto">
