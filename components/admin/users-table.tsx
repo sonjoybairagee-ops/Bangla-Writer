@@ -4,13 +4,25 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { 
   Search, 
   Crown, 
   Edit, 
   Trash2,
   CheckCircle,
-  XCircle 
+  XCircle,
+  MoreVertical,
+  Mail,
+  Calendar
 } from 'lucide-react';
 import AssignPlanModal from './assign-plan-modal';
 
@@ -45,18 +57,18 @@ export default function UsersTable({ users }: { users: User[] }) {
   );
 
   const getPlanBadge = (planId: string) => {
-    const badges: Record<string, { color: string; label: string }> = {
-      free: { color: 'bg-slate-100 text-slate-700', label: 'Free' },
-      starter: { color: 'bg-blue-100 text-blue-700', label: 'Starter' },
-      pro: { color: 'bg-purple-100 text-purple-700', label: 'Pro' },
-      agency: { color: 'bg-amber-100 text-amber-700', label: 'Agency' },
+    const badges: Record<string, { variant: any; label: string }> = {
+      free: { variant: 'secondary', label: 'Free' },
+      starter: { variant: 'info', label: 'Starter' },
+      pro: { variant: 'purple', label: 'Pro' },
+      agency: { variant: 'warning', label: 'Agency' },
     };
 
     const badge = badges[planId] || badges.free;
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${badge.color}`}>
+      <Badge variant={badge.variant}>
         {badge.label}
-      </span>
+      </Badge>
     );
   };
 
@@ -64,97 +76,114 @@ export default function UsersTable({ users }: { users: User[] }) {
     <>
       <Card>
         <CardContent className="p-6">
-          {/* Search */}
-          <div className="flex items-center gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          {/* Header with Search */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+            <div className="relative flex-1 w-full">
               <Input
                 placeholder="Search users by name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                leftIcon={<Search className="h-4 w-4" />}
+                className="w-full"
               />
             </div>
-            <div className="text-sm text-slate-600">
-              {filteredUsers.length} users
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-sm">
+                {filteredUsers.length} users
+              </Badge>
             </div>
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">
-                    User
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">
-                    Plan
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">
-                    Status
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">
-                    Activity
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">
-                    Joined
-                  </th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-600">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((user) => {
-                  const subscription = user.subscriptions[0];
-                  const isActive = subscription?.status === 'active';
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Plan</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Activity</TableHead>
+                  <TableHead>Joined</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-12 text-slate-500">
+                      No users found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredUsers.map((user) => {
+                    const subscription = user.subscriptions[0];
+                    const isActive = subscription?.status === 'active';
 
-                  return (
-                    <tr key={user.id} className="border-b hover:bg-slate-50">
-                      <td className="py-4 px-4">
-                        <div>
-                          <div className="font-medium flex items-center gap-2">
-                            {user.name || 'No name'}
-                            {user.role === 'admin' && (
-                              <Crown className="h-3 w-3 text-amber-500" />
-                            )}
+                    return (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-semibold">
+                              {(user.name || user.email)?.[0]?.toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="font-medium flex items-center gap-2">
+                                {user.name || 'No name'}
+                                {user.role === 'admin' && (
+                                  <Badge variant="warning" className="text-xs">
+                                    <Crown className="h-3 w-3 mr-1" />
+                                    Admin
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-sm text-slate-500 flex items-center gap-1 mt-0.5">
+                                <Mail className="h-3 w-3" />
+                                {user.email}
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-sm text-slate-500">{user.email}</div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        {subscription ? (
-                          getPlanBadge(subscription.planId)
-                        ) : (
-                          <span className="text-sm text-slate-500">No plan</span>
-                        )}
-                      </td>
-                      <td className="py-4 px-4">
-                        {isActive ? (
-                          <div className="flex items-center gap-1 text-green-600">
-                            <CheckCircle className="h-4 w-4" />
-                            <span className="text-sm">Active</span>
+                        </TableCell>
+                        <TableCell>
+                          {subscription ? (
+                            getPlanBadge(subscription.planId)
+                          ) : (
+                            <Badge variant="outline">No plan</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {isActive ? (
+                            <Badge variant="success" leftIcon={<CheckCircle className="h-3 w-3" />}>
+                              Active
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" leftIcon={<XCircle className="h-3 w-3" />}>
+                              Inactive
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1 text-sm">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{user._count.brands}</span>
+                              <span className="text-slate-500">brands</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{user._count.scripts}</span>
+                              <span className="text-slate-500">scripts</span>
+                            </div>
                           </div>
-                        ) : (
-                          <div className="flex items-center gap-1 text-slate-400">
-                            <XCircle className="h-4 w-4" />
-                            <span className="text-sm">Inactive</span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-sm text-slate-600">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(user.createdAt).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
                           </div>
-                        )}
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="text-sm text-slate-600">
-                          <div>{user._count.brands} brands</div>
-                          <div>{user._count.scripts} scripts</div>
-                          <div>{user._count.contentPlans} plans</div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 text-sm text-slate-600">
-                        {new Date(user.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center justify-end gap-2">
+                        </TableCell>
+                        <TableCell className="text-right">
                           <Button
                             size="sm"
                             variant="outline"
@@ -162,24 +191,18 @@ export default function UsersTable({ users }: { users: User[] }) {
                               setSelectedUser(user);
                               setShowAssignModal(true);
                             }}
+                            leftIcon={<Edit className="h-3 w-3" />}
                           >
-                            <Edit className="h-3 w-3 mr-1" />
                             Assign Plan
                           </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
           </div>
-
-          {filteredUsers.length === 0 && (
-            <div className="text-center py-12 text-slate-500">
-              No users found
-            </div>
-          )}
         </CardContent>
       </Card>
 
