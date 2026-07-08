@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/language-context';
 import {
   LayoutDashboard,
   Brain,
@@ -23,9 +24,11 @@ import {
 const navSections = [
   {
     title: 'Overview',
+    titleKey: null,
     items: [
       {
         title: 'Dashboard',
+        titleKey: 'nav.dashboard',
         href: '/dashboard',
         icon: LayoutDashboard,
       },

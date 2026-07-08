@@ -3,6 +3,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import { Sparkles, LogOut, User, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { LanguageToggle } from '@/components/language-toggle';
 
 export function DashboardHeader() {
   const { data: session } = useSession();
@@ -16,6 +17,9 @@ export function DashboardHeader() {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Language Toggle */}
+          <LanguageToggle />
+          
           <div className="text-sm">
             <div className="font-medium">{session?.user?.name}</div>
             <div className="text-slate-500">{session?.user?.email}</div>
