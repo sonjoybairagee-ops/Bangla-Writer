@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { generateOTP, sendVerificationEmail } from '@/lib/email';
+// OTP verification temporarily disabled
+// import { generateOTP, sendVerificationEmail } from '@/lib/email';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -19,6 +20,7 @@ export async function POST(req: NextRequest) {
     const existingUser = await prisma.user.findUnique({ where: { email } });
 
     if (existingUser) {
+      /* OTP VERIFICATION DISABLED - Direct login allowed
       // If already registered but not verified, resend OTP
       if (!existingUser.emailVerified) {
         const otp = generateOTP();
@@ -38,6 +40,7 @@ export async function POST(req: NextRequest) {
           email,
         });
       }
+      */
 
       return NextResponse.json(
         { error: 'এই ইমেইলে আগেই অ্যাকাউন্ট আছে। লগইন করুন।' },
@@ -48,13 +51,13 @@ export async function POST(req: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user (emailVerified = null means unverified)
+    // Create user with email verified (OTP disabled)
     const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
-        emailVerified: null, // ← not verified yet
+        emailVerified: new Date(), // ← Auto-verified (OTP disabled)
       },
       select: { id: true, name: true, email: true },
     });
@@ -69,6 +72,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    /* OTP VERIFICATION DISABLED
     // Generate OTP
     const otp = generateOTP();
     const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
@@ -87,6 +91,15 @@ export async function POST(req: NextRequest) {
         message: 'Account created! OTP sent to your email.',
         requiresVerification: true,
         email,
+      },
+      { status: 201 }
+    );
+    */
+
+    return NextResponse.json(
+      {
+        message: 'Account created successfully! You can now login.',
+        requiresVerification: false, // OTP disabled
       },
       { status: 201 }
     );

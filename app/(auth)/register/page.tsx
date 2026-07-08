@@ -36,8 +36,22 @@ export default function RegisterPage() {
         return;
       }
 
-      // Redirect to OTP verification page
-      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+      // OTP verification disabled - direct login after registration
+      // router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+      
+      // Auto sign in after successful registration
+      const signInResult = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (signInResult?.ok) {
+        router.push('/dashboard');
+      } else {
+        // Registration successful but auto-login failed, redirect to login
+        router.push('/login?message=Account created successfully. Please login.');
+      }
     } catch (error) {
       setError('Something went wrong');
     } finally {
