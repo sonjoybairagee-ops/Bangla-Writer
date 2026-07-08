@@ -116,7 +116,7 @@ export default function PricingPage() {
             Choose Your Perfect Plan
           </h1>
           <p className="text-slate-500 text-base max-w-lg mx-auto">
-            Try 3 generations free. If you like it, choose a plan below.
+            Try free. Choose a plan that fits your needs.
           </p>
         </div>
 
