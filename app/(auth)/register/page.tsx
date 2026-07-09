@@ -11,11 +11,12 @@ import { Sparkles, Eye, EyeOff, Rocket, Award, Clock, Heart, Check, Shield, Arro
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const referralCode = searchParams.get('ref');
+  const urlReferralCode = searchParams.get('ref');
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [referralCode, setReferralCode] = useState(urlReferralCode || '');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -198,10 +199,10 @@ function RegisterForm() {
             <h2 className="text-3xl font-bold text-slate-900 mb-2">Create Your Account</h2>
             <p className="text-slate-600">Start creating amazing content with AI</p>
             
-            {referralCode && (
+            {urlReferralCode && (
               <div className="mt-4 inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-full text-sm font-semibold">
                 <Check className="w-4 h-4" />
-                20% OFF on first subscription
+                20% OFF on first subscription (Code: {urlReferralCode})
               </div>
             )}
           </div>
@@ -266,6 +267,26 @@ function RegisterForm() {
               </div>
               <p className="text-xs text-slate-500">Must be at least 8 characters</p>
             </div>
+
+            {/* Optional Referral Code Input */}
+            {!urlReferralCode && (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">
+                  Referral Code <span className="text-slate-400 font-normal">(Optional)</span>
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Enter referral code for 20% OFF"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                  className="h-12 px-4 text-base border-slate-300 focus:border-purple-500 focus:ring-purple-500"
+                />
+                <p className="text-xs text-green-600 flex items-center gap-1">
+                  <Check className="w-3 h-3" />
+                  Get 20% OFF your first paid subscription
+                </p>
+              </div>
+            )}
 
             <Button 
               type="submit" 
