@@ -68,10 +68,16 @@ export default function BillingPage() {
     amount: number;
   } | null>(null);
   const [referralData, setReferralData] = useState<any>(null);
+  const [discountInfo, setDiscountInfo] = useState<{
+    hasDiscount: boolean;
+    discountPercent: number;
+    discountType: string;
+  } | null>(null);
 
   useEffect(() => { 
     fetchUsage();
     fetchReferralData();
+    fetchDiscountInfo();
   }, []);
 
   const fetchUsage = async () => {
@@ -93,6 +99,22 @@ export default function BillingPage() {
     } catch (error) {
       console.error('Failed to fetch referral data:', error);
     }
+  };
+
+  const fetchDiscountInfo = async () => {
+    try {
+      const res = await fetch('/api/billing/discount-info');
+      const data = await res.json();
+      setDiscountInfo(data);
+    } catch (error) {
+      console.error('Failed to fetch discount info:', error);
+    }
+  };
+
+  const calculateDiscountedPrice = (originalPrice: number): number => {
+    if (!discountInfo?.hasDiscount) return originalPrice;
+    const discount = Math.round(originalPrice * (discountInfo.discountPercent / 100));
+    return originalPrice - discount;
   };
 
   const handleCopyReferral = () => {
@@ -199,9 +221,17 @@ export default function BillingPage() {
           const isPopular = !!(plan as any).popular;
 
           const bdtMonthly = plan.prices.BDT;
-          const displayPrice = billing === 'yearly'
+          let displayPrice = billing === 'yearly'
             ? getYearlyMonthly(bdtMonthly)
             : bdtMonthly;
+
+          // Apply referral discount
+          let finalPrice = displayPrice;
+          let hasReferralDiscount = false;
+          if (discountInfo?.hasDiscount) {
+            finalPrice = calculateDiscountedPrice(displayPrice);
+            hasReferralDiscount = true;
+          }
 
           return (
             <div
@@ -240,10 +270,23 @@ export default function BillingPage() {
 
               {/* Price block */}
               <div className="px-6 pb-5 border-b border-slate-100">
+                {/* Referral Discount Badge */}
+                {hasReferralDiscount && (
+                  <div className="mb-3 inline-flex items-center gap-2 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-green-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                    <Gift className="w-3 h-3" />
+                    {discountInfo?.message || `${discountInfo?.discountPercent}% Discount Applied`}
+                  </div>
+                )}
+                
                 <div className="flex items-end gap-1 mb-1">
                   <span className="text-slate-400 text-2xl font-medium leading-none">৳</span>
-                  <span className="text-5xl font-black text-slate-900 leading-none tracking-tight">
-                    {displayPrice.toLocaleString('en-BD')}
+                  {hasReferralDiscount && (
+                    <span className="text-3xl font-bold text-slate-400 line-through leading-none mr-2">
+                      {displayPrice.toLocaleString('en-BD')}
+                    </span>
+                  )}
+                  <span className={`text-5xl font-black leading-none tracking-tight ${hasReferralDiscount ? 'text-green-600' : 'text-slate-900'}`}>
+                    {finalPrice.toLocaleString('en-BD')}
                   </span>
                   <span className="text-slate-400 text-sm mb-1.5 ml-0.5">/ month</span>
                 </div>
