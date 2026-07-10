@@ -2,11 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import {
-  performAbuseCheck,
-  getClientIP,
-  logSuspiciousActivity,
-} from '@/lib/utils/abuse-detection';
 // import { sendWelcomeEmail, sendReferralSignupNotification } from '@/lib/email/notifications';
 // OTP verification temporarily disabled
 // import { generateOTP, sendVerificationEmail } from '@/lib/email';
