@@ -167,9 +167,11 @@ export default function HooksPage() {
                 min="5"
                 max="20"
                 value={formData.count}
-                onChange={(e) =>
-                  setFormData({ ...formData, count: parseInt(e.target.value) })
-                }
+                onChange={(e) => {
+                  const parsed = parseInt(e.target.value, 10);
+                  const safeValue = Number.isNaN(parsed) ? 10 : Math.min(20, Math.max(5, parsed));
+                  setFormData({ ...formData, count: safeValue });
+                }}
               />
             </div>
 

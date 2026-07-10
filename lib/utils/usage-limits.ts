@@ -3,7 +3,7 @@ import { PRICING_PLANS } from '@/lib/constants/pricing';
 
 export async function checkUsageLimit(
   userId: string,
-  type: 'script' | 'hook' | 'plan' | 'ovc'
+  type: 'script' | 'hook' | 'plan' | 'ovc' | 'quick' | 'creative'
 ): Promise<{ allowed: boolean; message?: string; usage?: any; limit?: number }> {
   try {
     // Get current month/year
@@ -29,6 +29,20 @@ export async function checkUsageLimit(
       };
     }
 
+    // CRITICAL: enforce that the billing period hasn't expired.
+    // (Free trial subscriptions are created with status 'active' and never
+    // flipped to 'expired' by any background job — without this check they
+    // remain usable forever after the 7-day trial window.)
+    if (subscription.currentPeriodEnd && subscription.currentPeriodEnd < now) {
+      return {
+        allowed: false,
+        message:
+          subscription.planId === 'free'
+            ? 'Your 7-day free trial has ended. Please choose a plan to continue.'
+            : 'Your subscription has expired. Please renew to continue.',
+      };
+    }
+
     // Get or create usage record
     let usage = await prisma.usage.findUnique({
       where: {
@@ -50,6 +64,8 @@ export async function checkUsageLimit(
           hooksGenerated: 0,
           contentPlansCreated: 0,
           ovcScenesGenerated: 0,
+          quickGenerated: 0,
+          creativeGenerated: 0,
         },
       });
     }
@@ -91,6 +107,16 @@ export async function checkUsageLimit(
         limit = plan.limits.ovc_scenes;
         limitKey = 'OVC Scenes';
         break;
+      case 'quick':
+        currentUsage = usage.quickGenerated;
+        limit = plan.limits.quick_generations_per_month;
+        limitKey = 'CTA/Hashtag/Caption';
+        break;
+      case 'creative':
+        currentUsage = usage.creativeGenerated;
+        limit = plan.limits.creative_generations_per_month;
+        limitKey = 'Creative Studio';
+        break;
     }
 
     // Check if unlimited (-1)
@@ -124,7 +150,7 @@ export async function checkUsageLimit(
 
 export async function incrementUsage(
   userId: string,
-  type: 'script' | 'hook' | 'plan' | 'ovc'
+  type: 'script' | 'hook' | 'plan' | 'ovc' | 'quick' | 'creative'
 ): Promise<void> {
   try {
     const now = new Date();
@@ -146,6 +172,12 @@ export async function incrementUsage(
       case 'ovc':
         updateData.ovcScenesGenerated = { increment: 1 };
         break;
+      case 'quick':
+        updateData.quickGenerated = { increment: 1 };
+        break;
+      case 'creative':
+        updateData.creativeGenerated = { increment: 1 };
+        break;
     }
 
     // Upsert usage record
@@ -166,6 +198,8 @@ export async function incrementUsage(
         hooksGenerated: type === 'hook' ? 1 : 0,
         contentPlansCreated: type === 'plan' ? 1 : 0,
         ovcScenesGenerated: type === 'ovc' ? 1 : 0,
+        quickGenerated: type === 'quick' ? 1 : 0,
+        creativeGenerated: type === 'creative' ? 1 : 0,
       },
     });
   } catch (error) {

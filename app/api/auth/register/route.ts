@@ -11,12 +11,21 @@ const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   referralCode: z.string().optional(),
+  // Kept as free-form strings on purpose: this is just a UX nicety (which plan
+  // to nudge the user toward after signup). An invalid/garbage value here
+  // should never block account creation, so we validate against the known
+  // plan list ourselves below instead of failing the whole request via zod.
+  intendedPlan: z.string().optional(),
+  intendedBilling: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, email, password, referralCode } = registerSchema.parse(body);
+    const { name, email, password, referralCode, intendedPlan, intendedBilling } = registerSchema.parse(body);
+    const VALID_PLANS = ['starter', 'pro', 'agency'];
+    const safeIntendedPlan = intendedPlan && VALID_PLANS.includes(intendedPlan) ? intendedPlan : null;
+    const safeIntendedBilling = intendedBilling === 'yearly' ? 'yearly' : 'monthly';
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -73,6 +82,8 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
         emailVerified: new Date(), // ← Auto-verified (OTP disabled)
         referredBy: referrerId,
+        intendedPlan: safeIntendedPlan,
+        intendedBilling: safeIntendedPlan ? safeIntendedBilling : null,
       },
       select: { id: true, name: true, email: true },
     });

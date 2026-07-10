@@ -25,9 +25,11 @@ export const PRICING_PLANS = {
       scripts_per_month: 3,
       hooks_per_month: 3,
       brand_profiles: 1,
-      content_plans: 3,
+      content_plans: 1,
       ovc_scenes: 0,
       device_login: 1,
+      quick_generations_per_month: 5,
+      creative_generations_per_month: 3,
     },
     trial: true,
     trialDays: 7,
@@ -58,9 +60,11 @@ export const PRICING_PLANS = {
       scripts_per_month: 90,
       hooks_per_month: 90,
       brand_profiles: 1,
-      content_plans: 30,
+      content_plans: 5,
       ovc_scenes: 0,
       device_login: 1,
+      quick_generations_per_month: 90,
+      creative_generations_per_month: 30,
     },
   },
   pro: {
@@ -86,12 +90,14 @@ export const PRICING_PLANS = {
       'Priority WhatsApp support',
     ],
     limits: {
-      scripts_per_month: 200,
-      hooks_per_month: -1,
+      scripts_per_month: 150,
+      hooks_per_month: 200,
       brand_profiles: 2,
-      content_plans: -1,
-      ovc_scenes: 200,
+      content_plans: 10,
+      ovc_scenes: 60,
       device_login: 2,
+      quick_generations_per_month: 200,
+      creative_generations_per_month: 100,
     },
     popular: true,
   },
@@ -118,12 +124,14 @@ export const PRICING_PLANS = {
       'Dedicated support',
     ],
     limits: {
-      scripts_per_month: 1000,
-      hooks_per_month: -1,
+      scripts_per_month: 500,
+      hooks_per_month: 500,
       brand_profiles: 10,
-      content_plans: -1,
-      ovc_scenes: -1,
+      content_plans: 30,
+      ovc_scenes: 300,
       device_login: 5,
+      quick_generations_per_month: 500,
+      creative_generations_per_month: 300,
     },
   },
 } as const;
@@ -150,4 +158,16 @@ export function canCreateContentPlan(usage: any, planId: string): boolean {
   const limits = getPlanLimits(planId);
   if (limits.content_plans === -1) return true;
   return usage.contentPlansCreated < limits.content_plans;
+}
+
+export function canGenerateQuick(usage: any, planId: string): boolean {
+  const limits = getPlanLimits(planId);
+  if (limits.quick_generations_per_month === -1) return true;
+  return usage.quickGenerated < limits.quick_generations_per_month;
+}
+
+export function canGenerateCreative(usage: any, planId: string): boolean {
+  const limits = getPlanLimits(planId);
+  if (limits.creative_generations_per_month === -1) return true;
+  return usage.creativeGenerated < limits.creative_generations_per_month;
 }

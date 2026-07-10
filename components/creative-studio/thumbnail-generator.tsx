@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Image as ImageIcon, Copy, Download, TrendingUp, Eye, Zap } from 'lucide-react';
+import { Image as ImageIcon, Copy, Download, TrendingUp, Eye, Zap, Palette } from 'lucide-react';
 
 interface ThumbnailIdea {
   title: string;

@@ -102,6 +102,7 @@ export default function WriterProPage() {
           audience: formData.audience,
           hookType: 'CURIOSITY',
           count: 5,
+          language: formData.language,
         }),
       });
 
@@ -124,6 +125,7 @@ export default function WriterProPage() {
           goal: formData.goal,
           platform: formData.platform,
           offer: formData.product,
+          language: formData.language,
         }),
       });
 
@@ -146,6 +148,7 @@ export default function WriterProPage() {
           topic: formData.product,
           platform: formData.platform,
           niche: formData.audience,
+          language: formData.language,
         }),
       });
 
@@ -169,6 +172,7 @@ export default function WriterProPage() {
           platform: formData.platform,
           tone: formData.tone,
           length: 'medium',
+          language: formData.language,
         }),
       });
 

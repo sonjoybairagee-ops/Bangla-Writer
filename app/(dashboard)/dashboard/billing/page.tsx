@@ -72,6 +72,7 @@ export default function BillingPage() {
     hasDiscount: boolean;
     discountPercent: number;
     discountType: string;
+    message?: string;
   } | null>(null);
 
   useEffect(() => { 

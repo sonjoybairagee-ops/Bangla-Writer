@@ -7,12 +7,16 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sparkles, Eye, EyeOff, Rocket, Award, Clock, Heart, Check, Shield, ArrowLeft } from 'lucide-react';
+import { PRICING_PLANS } from '@/lib/constants/pricing';
 
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlReferralCode = searchParams.get('ref');
-  
+  const urlPlan = searchParams.get('plan'); // 'starter' | 'pro' | 'agency' from pricing page
+  const urlBilling = (searchParams.get('billing') === 'yearly' ? 'yearly' : 'monthly') as 'monthly' | 'yearly';
+  const selectedPlan = urlPlan && urlPlan in PRICING_PLANS ? PRICING_PLANS[urlPlan as keyof typeof PRICING_PLANS] : null;
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,6 +39,8 @@ function RegisterForm() {
           email, 
           password,
           referralCode: referralCode || undefined,
+          intendedPlan: urlPlan || undefined,
+          intendedBilling: urlPlan ? urlBilling : undefined,
         }),
       });
 
@@ -53,7 +59,7 @@ function RegisterForm() {
       });
 
       if (signInResult?.ok) {
-        router.push('/dashboard');
+        router.push(urlPlan ? `/dashboard?upgradeTo=${urlPlan}&billing=${urlBilling}` : '/dashboard');
       } else {
         router.push('/login?message=Account created successfully. Please login.');
       }
@@ -127,6 +133,19 @@ function RegisterForm() {
                 </div>
                 <div className="text-white/95 font-semibold mt-3">
                   Get 20% OFF your first paid subscription!
+                </div>
+              </div>
+            )}
+
+            {/* Selected Plan Badge */}
+            {selectedPlan && (
+              <div className="bg-white/10 backdrop-blur-md border-2 border-white/30 rounded-2xl p-6 mt-6">
+                <div className="text-purple-100 text-sm mb-1">You selected</div>
+                <div className="text-white font-bold text-xl mb-1">
+                  {selectedPlan.name} — ৳{selectedPlan.prices.BDT}/{urlBilling === 'yearly' ? 'month (yearly)' : 'month'}
+                </div>
+                <div className="text-purple-100 text-sm">
+                  Start with a 7-day free trial, then continue on this plan.
                 </div>
               </div>
             )}

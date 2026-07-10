@@ -133,7 +133,7 @@ export default function PricingPage() {
         {/* ── Pricing Grid ── */}
         <div className="grid md:grid-cols-3 gap-6 mb-10">
           {Object.entries(PRICING_PLANS).filter(([planId]) => planId !== 'free').map(([planId, plan]) => {
-            const style = PLAN_STYLE[planId];
+            const style = PLAN_STYLE[planId] ?? PLAN_STYLE.starter;
             const Icon = style.icon;
             const isPopular = !!(plan as any).popular;
 
@@ -214,7 +214,7 @@ export default function PricingPage() {
 
                 {/* CTA */}
                 <div className="px-6 pb-6">
-                  <Link href="/register">
+                  <Link href={`/register?plan=${planId}&billing=${billing}`}>
                     <button
                       className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-200 active:scale-95 ${style.btnClass}`}
                     >
@@ -271,7 +271,7 @@ export default function PricingPage() {
             />
             <FAQItem
               question="What happens after the free trial?"
-              answer="After trying 3 free generations, you'll need to choose a plan to continue. All plans come with full access to features."
+              answer="Your 7-day free trial gives you a taste of every feature — a handful of scripts, hooks, content plans, and Creative Studio generations. After the trial ends, choose a plan to keep creating without limits getting in the way."
             />
             <FAQItem
               question="Do you offer refunds?"

@@ -15,6 +15,8 @@ import {
   Mail,
   Phone,
   DollarSign,
+  Gift,
+  Award,
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
@@ -39,6 +41,9 @@ interface Payment {
     id: string;
     name: string;
     email: string;
+    receivedReferrals?: Array<{ id: string }>;
+    hasLifetimeDiscount?: boolean;
+    lifetimeDiscountPercent?: number;
   };
 }
 
@@ -254,7 +259,15 @@ export default function AdminPaymentsPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {filteredPayments.map((payment) => (
+          {filteredPayments.map((payment) => {
+            // Check if user has referral discount
+            const hasFirstTimeDiscount = (payment.user.receivedReferrals?.length ?? 0) > 0;
+            const hasLifetimeDiscount = payment.user.hasLifetimeDiscount === true;
+            const discountPercent = hasLifetimeDiscount 
+              ? (payment.user.lifetimeDiscountPercent || 20)
+              : hasFirstTimeDiscount ? 20 : 0;
+            
+            return (
             <Card key={payment.id} className="p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-start justify-between gap-6">
                 {/* Payment Info */}
@@ -266,7 +279,7 @@ export default function AdminPaymentsPage() {
                         <Smartphone className="w-6 h-6 text-pink-600" />
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="text-lg font-bold text-slate-900">
                             {payment.planName}
                           </h3>
@@ -281,6 +294,23 @@ export default function AdminPaymentsPage() {
                           >
                             {payment.status}
                           </span>
+                          
+                          {/* Referral Discount Badge */}
+                          {discountPercent > 0 && (
+                            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 flex items-center gap-1">
+                              {hasLifetimeDiscount ? (
+                                <>
+                                  <Award className="w-3 h-3" />
+                                  Lifetime {discountPercent}% OFF
+                                </>
+                              ) : (
+                                <>
+                                  <Gift className="w-3 h-3" />
+                                  First-Time {discountPercent}% OFF
+                                </>
+                              )}
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm text-slate-500">
                           {payment.billing === 'yearly' ? 'Yearly' : 'Monthly'} Billing
@@ -288,9 +318,23 @@ export default function AdminPaymentsPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-slate-900">
-                        ৳{parseFloat(payment.amount).toLocaleString('en-BD')}
-                      </p>
+                      {discountPercent > 0 ? (
+                        <div>
+                          <p className="text-sm text-slate-400 line-through">
+                            ৳{parseFloat(payment.amount).toLocaleString('en-BD')}
+                          </p>
+                          <p className="text-2xl font-bold text-green-600">
+                            ৳{(parseFloat(payment.amount) * (1 - discountPercent / 100)).toLocaleString('en-BD')}
+                          </p>
+                          <p className="text-xs text-green-600 font-medium">
+                            {discountPercent}% discount applied
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-2xl font-bold text-slate-900">
+                          ৳{parseFloat(payment.amount).toLocaleString('en-BD')}
+                        </p>
+                      )}
                       <p className="text-xs text-slate-500 mt-1">
                         {formatDate(payment.createdAt)}
                       </p>
@@ -368,7 +412,8 @@ export default function AdminPaymentsPage() {
                 )}
               </div>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

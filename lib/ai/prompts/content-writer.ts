@@ -214,7 +214,7 @@ Make it actionable, strategic, results-focused, and optimized for viral growth.
 `.trim();
 }
 
-export function createBrandVoicePrompt(brandName: string, existingContent?: string): string {
+export function createBrandVoiceAnalysisPrompt(brandName: string, existingContent?: string): string {
   return `
 You are a brand voice analyzer. Analyze the following content and extract the brand voice characteristics.
 

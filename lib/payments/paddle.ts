@@ -77,10 +77,55 @@ export async function createPaddleCheckout({
   }
 }
 
-export async function verifyPaddleWebhook(payload: any, signature: string): Promise<boolean> {
-  // Implement Paddle webhook signature verification
-  // This is a placeholder - implement proper verification based on Paddle docs
-  return true;
+import crypto from 'crypto';
+
+/**
+ * Verifies a Paddle Billing webhook using the Paddle-Signature header.
+ * Paddle sends: "Paddle-Signature: ts=<unix_ts>;h1=<hex_hmac>"
+ * The signed content is `${ts}:${rawRequestBody}` (the *raw* body string,
+ * NOT the re-serialized JSON — re-serializing can change whitespace/key
+ * order and silently break verification).
+ *
+ * IMPORTANT: the caller must pass the untouched raw body text (from
+ * `await req.text()`), not `JSON.stringify(await req.json())`.
+ */
+export function verifyPaddleWebhook(rawBody: string, signatureHeader: string | null): boolean {
+  if (!signatureHeader) return false;
+
+  const secret = process.env.PADDLE_WEBHOOK_SECRET;
+  if (!secret) {
+    console.error('PADDLE_WEBHOOK_SECRET is not configured — refusing to trust webhook.');
+    return false;
+  }
+
+  // Parse "ts=169...;h1=abcd..." into a map
+  const parts = Object.fromEntries(
+    signatureHeader.split(';').map((p) => {
+      const [key, value] = p.split('=');
+      return [key, value];
+    })
+  );
+  const timestamp = parts.ts;
+  const receivedHash = parts.h1;
+
+  if (!timestamp || !receivedHash) return false;
+
+  // Reject stale webhooks (>5 min old) to prevent replay attacks
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  if (Math.abs(nowSeconds - parseInt(timestamp, 10)) > 300) {
+    console.error('Paddle webhook timestamp too old/skewed — possible replay attempt.');
+    return false;
+  }
+
+  const signedPayload = `${timestamp}:${rawBody}`;
+  const expectedHash = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');
+
+  // Constant-time comparison to avoid timing attacks
+  const expectedBuf = Buffer.from(expectedHash, 'hex');
+  const receivedBuf = Buffer.from(receivedHash, 'hex');
+  if (expectedBuf.length !== receivedBuf.length) return false;
+
+  return crypto.timingSafeEqual(expectedBuf, receivedBuf);
 }
 
 export async function handlePaddleWebhook(payload: any) {
@@ -110,6 +155,16 @@ export async function handlePaddleWebhook(payload: any) {
         type: 'subscription.updated',
         subscriptionId: data.id,
         status: data.status,
+        // Paddle includes the (possibly renewed) billing period on this event.
+        // Without this, a renewed subscription's currentPeriodEnd never moves
+        // forward, and the expire-trials cron will incorrectly expire paying
+        // customers at the end of their *first* billing period.
+        currentPeriodStart: data.current_billing_period?.starts_at
+          ? new Date(data.current_billing_period.starts_at)
+          : undefined,
+        currentPeriodEnd: data.current_billing_period?.ends_at
+          ? new Date(data.current_billing_period.ends_at)
+          : undefined,
       };
 
     case 'subscription.cancelled':
@@ -123,6 +178,13 @@ export async function handlePaddleWebhook(payload: any) {
       return {
         type: 'payment.succeeded',
         userId: data.custom_data?.user_id,
+        // If this payment is tied to a subscription renewal, Paddle includes
+        // subscription_id — use it to also bump that subscription's period
+        // in the route handler (belt-and-braces alongside subscription.updated).
+        subscriptionId: data.subscription_id || undefined,
+        currentPeriodEnd: data.current_billing_period?.ends_at
+          ? new Date(data.current_billing_period.ends_at)
+          : undefined,
         paymentData: {
           amount: parseFloat(data.amount) / 100,
           currency: data.currency_code,

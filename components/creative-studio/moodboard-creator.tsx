@@ -29,6 +29,7 @@ export function MoodboardCreator() {
     projectDescription: '',
     targetMood: '',
     industry: '',
+    language: 'bangla',
   });
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<Moodboard | null>(null);
@@ -91,6 +92,41 @@ export function MoodboardCreator() {
                 onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
               />
             </div>
+
+            {/* Language */}
+            <div>
+              <label className="text-sm font-medium">Language Output</label>
+              <div className="grid grid-cols-3 gap-2 mt-1">
+                <Button
+                  type="button"
+                  variant={formData.language === 'bangla' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'bangla' })}
+                  className={formData.language === 'bangla' ? 'bg-pink-600 hover:bg-pink-700' : ''}
+                >
+                  বাংলা
+                </Button>
+                <Button
+                  type="button"
+                  variant={formData.language === 'english' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'english' })}
+                  className={formData.language === 'english' ? 'bg-pink-600 hover:bg-pink-700' : ''}
+                >
+                  English
+                </Button>
+                <Button
+                  type="button"
+                  variant={formData.language === 'banglish' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, language: 'banglish' })}
+                  className={formData.language === 'banglish' ? 'bg-pink-600 hover:bg-pink-700' : ''}
+                >
+                  বাংলিশ
+                </Button>
+              </div>
+            </div>
+
             <Button onClick={handleGenerate} disabled={generating} className="w-full">
               {generating ? 'Creating...' : 'Create Moodboard'}
             </Button>

@@ -44,30 +44,8 @@ export async function POST(req: NextRequest) {
     });
 
     const generatedHooks = await generateJSON(prompt, {
-      model: 'gpt-4o',
+      model: 'gpt-5.4-mini',
       temperature: 0.9,
-    });
-
-    // Update usage
-    await prisma.usage.upsert({
-      where: {
-        userId_month_year: {
-          userId: session.user.id,
-          month: currentDate.getMonth() + 1,
-          year: currentDate.getFullYear(),
-        },
-      },
-      create: {
-        userId: session.user.id,
-        month: currentDate.getMonth() + 1,
-        year: currentDate.getFullYear(),
-        hooksGenerated: 1,
-      },
-      update: {
-        hooksGenerated: {
-          increment: 1,
-        },
-      },
     });
 
     // Increment usage (if not using bonus)
