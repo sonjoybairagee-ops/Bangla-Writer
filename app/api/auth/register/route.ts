@@ -33,32 +33,29 @@ export async function POST(req: NextRequest) {
     const safeIntendedPlan = intendedPlan && VALID_PLANS.includes(intendedPlan) ? intendedPlan : null;
     const safeIntendedBilling = intendedBilling === 'yearly' ? 'yearly' : 'monthly';
 
-    // 🛡️ ABUSE DETECTION
-    const clientIP = getClientIP(req);
-    const userAgent = req.headers.get('user-agent') || undefined;
-    const deviceFingerprint = body.deviceFingerprint; // Sent from client
+    // 🛡️ ABUSE DETECTION - TEMPORARILY DISABLED FOR DEBUGGING
+    // const clientIP = getClientIP(req);
+    // const userAgent = req.headers.get('user-agent') || undefined;
+    // const deviceFingerprint = body.deviceFingerprint;
     
-    const abuseCheck = await performAbuseCheck(email, clientIP, userAgent, deviceFingerprint);
+    // const abuseCheck = await performAbuseCheck(email, clientIP, userAgent, deviceFingerprint);
     
-    if (abuseCheck.isAbuse) {
-      // Log suspicious activity
-      await logSuspiciousActivity(email, clientIP, abuseCheck.reason || 'Unknown', abuseCheck.riskLevel);
-      
-      return NextResponse.json(
-        { error: abuseCheck.reason || 'Account creation blocked due to suspicious activity' },
-        { status: 403 }
-      );
-    }
+    // if (abuseCheck.isAbuse) {
+    //   await logSuspiciousActivity(email, clientIP, abuseCheck.reason || 'Unknown', abuseCheck.riskLevel);
+    //   return NextResponse.json(
+    //     { error: abuseCheck.reason || 'Account creation blocked due to suspicious activity' },
+    //     { status: 403 }
+    //   );
+    // }
 
-    // Log medium risk for monitoring
-    if (abuseCheck.riskLevel === 'medium') {
-      await logSuspiciousActivity(
-        email,
-        clientIP,
-        abuseCheck.reason || 'Medium risk detected',
-        'medium'
-      );
-    }
+    // if (abuseCheck.riskLevel === 'medium') {
+    //   await logSuspiciousActivity(
+    //     email,
+    //     clientIP,
+    //     abuseCheck.reason || 'Medium risk detected',
+    //     'medium'
+    //   );
+    // }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
