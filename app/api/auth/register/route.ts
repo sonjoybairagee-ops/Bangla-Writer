@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import {
+  performAbuseCheck,
+  getClientIP,
+  logSuspiciousActivity,
+} from '@/lib/utils/abuse-detection';
 // import { sendWelcomeEmail, sendReferralSignupNotification } from '@/lib/email/notifications';
 // OTP verification temporarily disabled
 // import { generateOTP, sendVerificationEmail } from '@/lib/email';
@@ -26,6 +31,32 @@ export async function POST(req: NextRequest) {
     const VALID_PLANS = ['starter', 'pro', 'agency'];
     const safeIntendedPlan = intendedPlan && VALID_PLANS.includes(intendedPlan) ? intendedPlan : null;
     const safeIntendedBilling = intendedBilling === 'yearly' ? 'yearly' : 'monthly';
+
+    // 🛡️ ABUSE DETECTION
+    const clientIP = getClientIP(req);
+    const userAgent = req.headers.get('user-agent') || undefined;
+    
+    const abuseCheck = await performAbuseCheck(email, clientIP, userAgent);
+    
+    if (abuseCheck.isAbuse) {
+      // Log suspicious activity
+      await logSuspiciousActivity(email, clientIP, abuseCheck.reason || 'Unknown', abuseCheck.riskLevel);
+      
+      return NextResponse.json(
+        { error: abuseCheck.reason || 'Account creation blocked due to suspicious activity' },
+        { status: 403 }
+      );
+    }
+
+    // Log medium risk for monitoring
+    if (abuseCheck.riskLevel === 'medium') {
+      await logSuspiciousActivity(
+        email,
+        clientIP,
+        abuseCheck.reason || 'Medium risk detected',
+        'medium'
+      );
+    }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
