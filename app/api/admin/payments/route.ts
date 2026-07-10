@@ -3,39 +3,41 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-/**
- * GET /api/admin/payments?status=pending|verified|rejected|all
- * 
- * Admin-only endpoint to fetch payments with user details and referral discount info
- */
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
+    
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user is admin
+    // Check if admin
     const adminUser = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { isAdmin: true } as any,
+      select: { role: true },
     });
 
-    if (!(adminUser as any)?.isAdmin) {
+    if (adminUser?.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Get status filter from query params
-    const { searchParams } = new URL(request.url);
-    const statusFilter = searchParams.get('status') || 'all';
+    const { searchParams } = new URL(req.url);
+    const status = searchParams.get('status') || 'pending';
 
     // Build where clause
-    const where: any = {};
-    if (statusFilter !== 'all') {
-      where.status = statusFilter;
+    let where: any = {};
+    
+    if (status === 'pending') {
+      where.status = 'pending';
+    } else if (status === 'verified') {
+      where.status = 'verified';
+    } else if (status === 'rejected') {
+      where.status = 'rejected';
     }
+    // 'all' = no filter
 
-    // Fetch payments with user details and referral info
+    // Fetch payments
     const payments = await prisma.payment.findMany({
       where,
       include: {
@@ -47,18 +49,22 @@ export async function GET(request: NextRequest) {
             hasLifetimeDiscount: true,
             lifetimeDiscountPercent: true,
             receivedReferrals: {
-              select: { id: true }
-            }
-          }
-        }
+              select: { id: true },
+            },
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
+        createdAt: 'desc',
       },
-      take: 100 // Limit to 100 most recent
+      take: 100, // Limit to latest 100
     });
 
-    return NextResponse.json({ payments }, { status: 200 });
+    return NextResponse.json({ 
+      payments,
+      count: payments.length,
+    });
+
   } catch (error) {
     console.error('Admin payments fetch error:', error);
     return NextResponse.json(

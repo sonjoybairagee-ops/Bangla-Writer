@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import crypto from 'crypto';
+import { generateOTP, sendPasswordResetEmail } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,32 +10,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
     }
 
-    // Find user — always return success to prevent email enumeration
-    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
 
     if (user) {
-      // Generate secure token
-      const token = crypto.randomBytes(32).toString('hex');
-      const expires = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
+      const otp = generateOTP();
+      const expires = new Date(Date.now() + 1000 * 60 * 10); // 10 minutes
 
-      // Store token in VerificationToken table (reusing NextAuth's table)
+      // Reuse NextAuth's VerificationToken table.
+      // identifier = "reset:<email>" to keep this separate from signup-OTP tokens
       await prisma.verificationToken.upsert({
-        where: { identifier_token: { identifier: email, token } },
+        where: { identifier_token: { identifier: `reset:${normalizedEmail}`, token: otp } },
         update: { expires },
-        create: { identifier: email, token, expires },
+        create: { identifier: `reset:${normalizedEmail}`, token: otp, expires },
       });
 
-      // TODO: Send email via nodemailer / Resend / SendGrid
-      // const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}&email=${email}`;
-      // await sendResetEmail({ to: email, resetUrl });
-
-      console.log(`[ForgotPassword] Reset token for ${email}: ${token}`);
+      try {
+        await sendPasswordResetEmail(normalizedEmail, otp);
+      } catch (emailError) {
+        console.error('Failed to send reset OTP email:', emailError);
+      }
     }
 
     // Always return success (security: don't reveal if email exists)
     return NextResponse.json({
       success: true,
-      message: 'If this email is registered, a reset link has been sent.',
+      message: 'If this email is registered, a reset code has been sent.',
     });
   } catch (error) {
     console.error('Forgot password error:', error);
