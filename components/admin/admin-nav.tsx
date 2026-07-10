@@ -21,7 +21,7 @@ export default function AdminNav() {
     { href: '/admin', label: 'Dashboard', icon: Home },
     { href: '/admin/users', label: 'Users', icon: Users },
     { href: '/admin/payments', label: 'Payments', icon: CreditCard },
-    { href: '/admin/devices', label: 'Devices', icon: Monitor },
+    { href: '/admin/flagged-signups', label: 'Flagged', icon: Shield },
     { href: '/admin/referrals', label: 'Referrals', icon: Gift },
     { href: '/admin/support', label: 'Support', icon: MessageCircle },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },

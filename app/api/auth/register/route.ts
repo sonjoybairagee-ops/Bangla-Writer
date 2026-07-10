@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import {
+  performAbuseCheck,
+  getClientIP,
+  logFlaggedSignup,
+} from '@/lib/utils/abuse-detection';
 // import { sendWelcomeEmail, sendReferralSignupNotification } from '@/lib/email/notifications';
 // OTP verification temporarily disabled
 // import { generateOTP, sendVerificationEmail } from '@/lib/email';
@@ -28,29 +33,14 @@ export async function POST(req: NextRequest) {
     const safeIntendedPlan = intendedPlan && VALID_PLANS.includes(intendedPlan) ? intendedPlan : null;
     const safeIntendedBilling = intendedBilling === 'yearly' ? 'yearly' : 'monthly';
 
-    // 🛡️ ABUSE DETECTION - TEMPORARILY DISABLED FOR DEBUGGING
-    // const clientIP = getClientIP(req);
-    // const userAgent = req.headers.get('user-agent') || undefined;
-    // const deviceFingerprint = body.deviceFingerprint;
+    // 🛡️ ABUSE DETECTION (Non-blocking - logs for admin review)
+    const clientIP = getClientIP(req);
+    const userAgent = req.headers.get('user-agent') || undefined;
     
-    // const abuseCheck = await performAbuseCheck(email, clientIP, userAgent, deviceFingerprint);
+    const abuseCheck = await performAbuseCheck(email, clientIP, userAgent);
     
-    // if (abuseCheck.isAbuse) {
-    //   await logSuspiciousActivity(email, clientIP, abuseCheck.reason || 'Unknown', abuseCheck.riskLevel);
-    //   return NextResponse.json(
-    //     { error: abuseCheck.reason || 'Account creation blocked due to suspicious activity' },
-    //     { status: 403 }
-    //   );
-    // }
-
-    // if (abuseCheck.riskLevel === 'medium') {
-    //   await logSuspiciousActivity(
-    //     email,
-    //     clientIP,
-    //     abuseCheck.reason || 'Medium risk detected',
-    //     'medium'
-    //   );
-    // }
+    // Don't block - just log if risky
+    // Admin will review flagged signups later
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -122,6 +112,11 @@ export async function POST(req: NextRequest) {
         year: now.getFullYear(),
       },
     });
+
+    // Log flagged signup if risky (non-blocking)
+    if (abuseCheck.isRisky) {
+      await logFlaggedSignup(user.id, email, clientIP, abuseCheck);
+    }
 
     // Create 7-day free trial subscription
     const trialEndDate = new Date();

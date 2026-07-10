@@ -45,6 +45,9 @@ model User {
   ticketMessages    TicketMessage[]
   userSessions      UserSession[]
   
+  // Flagged signups (if this user was flagged)
+  flaggedSignups    FlaggedSignup[]
+  
   // Referral System
   referralCode      String?          @unique
   referredBy        String?
@@ -653,4 +656,34 @@ model DeviceFingerprint {
   @@index([fingerprint])
   @@index([riskLevel])
   @@index([isBlocked])
+}
+
+// Flagged Signups (Admin Review System)
+model FlaggedSignup {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Detection details
+  email       String
+  ipAddress   String?
+  riskLevel   String  // low, medium, high
+  flags       String[] // Array of detected issues
+  reason      String?  @db.Text
+  metadata    Json?    // Additional detection data
+  
+  // Admin decision
+  status         String   @default("pending") // pending, approved, rejected, blocked
+  reviewedBy     String?  // Admin user ID who reviewed
+  reviewedAt     DateTime?
+  reviewNotes    String?  @db.Text
+  adminDecision  String?  // allow, block, monitor
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([riskLevel])
+  @@index([createdAt])
 }
