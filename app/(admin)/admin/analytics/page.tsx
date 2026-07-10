@@ -7,7 +7,6 @@ import {
   Users, 
   DollarSign, 
   CreditCard,
-  Calendar,
   Activity
 } from 'lucide-react';
 import {
@@ -25,9 +24,20 @@ import {
   Legend,
 } from 'recharts';
 
+interface AnalyticsData {
+  totalUsers: number;
+  activeSubscriptions: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+  userGrowthData: { month: string; users: number; subscriptions: number }[];
+  revenueTrendData: { month: string; revenue: number }[];
+  planDistributionData: { plan: string; users: number; revenue: number }[];
+}
+
 export default function AdminAnalyticsPage() {
   const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState<any>(null);
+  const [error, setError] = useState('');
+  const [metrics, setMetrics] = useState<AnalyticsData | null>(null);
 
   useEffect(() => {
     fetchAnalytics();
@@ -36,52 +46,18 @@ export default function AdminAnalyticsPage() {
   const fetchAnalytics = async () => {
     try {
       const response = await fetch('/api/admin/analytics/overview');
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics');
+      }
       const data = await response.json();
       setMetrics(data);
-    } catch (error) {
-      console.error('Failed to fetch analytics:', error);
-      // Set demo data
-      setMetrics({
-        totalUsers: 1247,
-        activeSubscriptions: 428,
-        totalRevenue: 2850000,
-        monthlyRevenue: 485000,
-        recentUsers: [],
-        recentPayments: [],
-      });
+    } catch (err) {
+      console.error('Failed to fetch analytics:', err);
+      setError('অ্যানালিটিক্স ডেটা লোড করতে ব্যর্থ হয়েছে।');
     } finally {
       setLoading(false);
     }
   };
-
-  // Generate user growth data
-  const userGrowthData = Array.from({ length: 12 }, (_, i) => {
-    const month = new Date();
-    month.setMonth(month.getMonth() - (11 - i));
-    return {
-      month: month.toLocaleDateString('en-US', { month: 'short' }),
-      users: Math.round(50 + i * 15 + Math.random() * 20),
-      subscriptions: Math.round(20 + i * 8 + Math.random() * 10),
-    };
-  });
-
-  // Generate revenue trend data
-  const revenueTrendData = Array.from({ length: 12 }, (_, i) => {
-    const month = new Date();
-    month.setMonth(month.getMonth() - (11 - i));
-    return {
-      month: month.toLocaleDateString('en-US', { month: 'short' }),
-      revenue: Math.round(25000 + i * 8000 + Math.random() * 5000),
-      target: 35000 + i * 5000,
-    };
-  });
-
-  // Generate plan distribution data
-  const planDistributionData = [
-    { plan: 'Starter', users: 145, revenue: 580000 },
-    { plan: 'Pro', users: 238, revenue: 1428000 },
-    { plan: 'Agency', users: 45, revenue: 900000 },
-  ];
 
   if (loading) {
     return (
@@ -93,6 +69,17 @@ export default function AdminAnalyticsPage() {
               <div key={i} className="h-32 bg-slate-200 rounded"></div>
             ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !metrics) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4">
+          {error || 'কোনো ডেটা পাওয়া যায়নি।'}
         </div>
       </div>
     );
@@ -117,7 +104,7 @@ export default function AdminAnalyticsPage() {
             <Users className="h-4 w-4 text-slate-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics?.totalUsers || 0}</div>
+            <div className="text-2xl font-bold">{metrics.totalUsers}</div>
             <p className="text-xs text-slate-500 mt-1">
               All registered users
             </p>
@@ -132,7 +119,7 @@ export default function AdminAnalyticsPage() {
             <CreditCard className="h-4 w-4 text-slate-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics?.activeSubscriptions || 0}</div>
+            <div className="text-2xl font-bold">{metrics.activeSubscriptions}</div>
             <p className="text-xs text-slate-500 mt-1">
               Currently active plans
             </p>
@@ -148,7 +135,7 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ৳{Number(metrics?.totalRevenue || 0).toLocaleString()}
+              ৳{metrics.totalRevenue.toLocaleString()}
             </div>
             <p className="text-xs text-slate-500 mt-1">
               All-time revenue
@@ -165,7 +152,7 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ৳{Number(metrics?.monthlyRevenue || 0).toLocaleString()}
+              ৳{metrics.monthlyRevenue.toLocaleString()}
             </div>
             <p className="text-xs text-slate-500 mt-1">
               Monthly revenue
@@ -185,7 +172,7 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <AreaChart data={userGrowthData}>
+              <AreaChart data={metrics.userGrowthData}>
                 <defs>
                   <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
@@ -238,7 +225,7 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={revenueTrendData}>
+              <LineChart data={metrics.revenueTrendData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} tickLine={false} />
                 <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} />
@@ -260,15 +247,6 @@ export default function AdminAnalyticsPage() {
                   name="Actual Revenue"
                   dot={{ fill: '#8b5cf6', r: 4 }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="target" 
-                  stroke="#94a3b8" 
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  name="Target"
-                  dot={false}
-                />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -282,7 +260,7 @@ export default function AdminAnalyticsPage() {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={planDistributionData}>
+            <BarChart data={metrics.planDistributionData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="plan" stroke="#94a3b8" fontSize={12} tickLine={false} />
               <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} />
@@ -294,7 +272,7 @@ export default function AdminAnalyticsPage() {
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                 }}
                 formatter={(value: number, name: string) => {
-                  if (name === 'revenue') return `৳${value.toLocaleString()}`;
+                  if (name === 'Revenue (৳)') return `৳${value.toLocaleString()}`;
                   return value;
                 }}
               />

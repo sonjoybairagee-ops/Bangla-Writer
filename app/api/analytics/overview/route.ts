@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma'; // ⚠️ path check করুন — আপনার প্রজেক্টে Prisma client কোথায় export হয় (হতে পারে @/lib/db)
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,85 +11,148 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    const userId = user.id;
+
     const { searchParams } = new URL(req.url);
     const range = searchParams.get('range') || '30d';
+    const days = range === '7d' ? 7 : range === '90d' ? 90 : 30;
 
-    // Mock data for now - in production, fetch from database
-    const metrics = {
-      totalViews: 245800,
-      viewsGrowth: 12.5,
-      engagementRate: 4.8,
-      engagementGrowth: 8.2,
-      totalFollowers: 42500,
-      followersGrowth: 15.1,
-      avgViralScore: 76,
-      viralScoreGrowth: 5.3,
-      
-      // Additional metrics
-      totalPosts: 45,
-      totalReach: 189000,
-      impressions: 312000,
-      clicks: 15600,
-      shares: 3200,
-      saves: 4800,
-      comments: 2100,
-      
-      // Platform breakdown
-      platforms: [
-        { name: 'Instagram', views: 98500, percentage: 40 },
-        { name: 'TikTok', views: 87200, percentage: 35 },
-        { name: 'Facebook', views: 45300, percentage: 18 },
-        { name: 'LinkedIn', views: 14800, percentage: 7 },
-      ],
-      
-      // Top content
-      topContent: [
-        {
-          id: '1',
-          title: '5 Tips for Growing Your Business',
-          views: 45200,
-          engagement: 8.5,
-          type: 'Reel',
-          platform: 'Instagram',
-          date: '2024-01-15',
-        },
-        {
-          id: '2',
-          title: 'Behind the Scenes: Product Launch',
-          views: 38700,
-          engagement: 7.2,
-          type: 'Story',
-          platform: 'Instagram',
-          date: '2024-01-12',
-        },
-        {
-          id: '3',
-          title: 'Customer Success Story',
-          views: 32100,
-          engagement: 6.8,
-          type: 'Post',
-          platform: 'Facebook',
-          date: '2024-01-10',
-        },
-        {
-          id: '4',
-          title: 'How-To Tutorial: Step by Step',
-          views: 28900,
-          engagement: 5.9,
-          type: 'Carousel',
-          platform: 'Instagram',
-          date: '2024-01-08',
-        },
-      ],
-      
-      // Engagement over time (daily data)
-      engagementOverTime: generateDailyData(range),
+    const now = new Date();
+    const rangeStart = new Date(now);
+    rangeStart.setDate(rangeStart.getDate() - days);
+
+    const prevRangeStart = new Date(rangeStart);
+    prevRangeStart.setDate(prevRangeStart.getDate() - days);
+
+    // ---- Current period counts ----
+    const [totalScripts, totalContentPlans, prevScripts, prevContentPlans] = await Promise.all([
+      prisma.script.count({ where: { userId, createdAt: { gte: rangeStart } } }),
+      prisma.contentPlan.count({ where: { userId, createdAt: { gte: rangeStart } } }),
+      prisma.script.count({ where: { userId, createdAt: { gte: prevRangeStart, lt: rangeStart } } }),
+      prisma.contentPlan.count({ where: { userId, createdAt: { gte: prevRangeStart, lt: rangeStart } } }),
+    ]);
+
+    // ---- Viral score average (current vs previous period) ----
+    const [viralAggCurrent, viralAggPrev] = await Promise.all([
+      prisma.script.aggregate({
+        where: { userId, createdAt: { gte: rangeStart }, viralScore: { not: null } },
+        _avg: { viralScore: true },
+      }),
+      prisma.script.aggregate({
+        where: { userId, createdAt: { gte: prevRangeStart, lt: rangeStart }, viralScore: { not: null } },
+        _avg: { viralScore: true },
+      }),
+    ]);
+
+    const avgViralScore = Math.round(viralAggCurrent._avg.viralScore || 0);
+    const prevAvgViralScore = Math.round(viralAggPrev._avg.viralScore || 0);
+
+    // ---- High-viral content count (viralScore >= 70) ----
+    const [highViralCount, prevHighViralCount] = await Promise.all([
+      prisma.script.count({
+        where: { userId, createdAt: { gte: rangeStart }, viralScore: { gte: 70 } },
+      }),
+      prisma.script.count({
+        where: { userId, createdAt: { gte: prevRangeStart, lt: rangeStart }, viralScore: { gte: 70 } },
+      }),
+    ]);
+
+    // ---- % change helpers ----
+    const pctChange = (current: number, prev: number) => {
+      if (prev === 0) return current > 0 ? 100 : 0;
+      return Number((((current - prev) / prev) * 100).toFixed(1));
     };
+
+    // ---- Platform breakdown (real) ----
+    const platformGroups = await prisma.script.groupBy({
+      by: ['platform'],
+      where: { userId, createdAt: { gte: rangeStart } },
+      _count: { _all: true },
+    });
+    const platforms = platformGroups
+      .map((p) => ({ name: p.platform, count: p._count._all }))
+      .sort((a, b) => b.count - a.count);
+
+    // ---- Content type breakdown (real) ----
+    const typeGroups = await prisma.script.groupBy({
+      by: ['type'],
+      where: { userId, createdAt: { gte: rangeStart } },
+      _count: { _all: true },
+    });
+    const contentTypes = typeGroups
+      .map((t) => ({ type: t.type, count: t._count._all }))
+      .sort((a, b) => b.count - a.count);
+
+    // ---- Daily content-creation trend (real, replaces fake "engagement over time") ----
+    const scriptsInRange = await prisma.script.findMany({
+      where: { userId, createdAt: { gte: rangeStart } },
+      select: { createdAt: true, viralScore: true },
+    });
+
+    const dailyMap = new Map<string, { count: number; viralSum: number; viralCount: number }>();
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      dailyMap.set(key, { count: 0, viralSum: 0, viralCount: 0 });
+    }
+    for (const s of scriptsInRange) {
+      const key = s.createdAt.toISOString().split('T')[0];
+      const entry = dailyMap.get(key);
+      if (entry) {
+        entry.count += 1;
+        if (s.viralScore != null) {
+          entry.viralSum += s.viralScore;
+          entry.viralCount += 1;
+        }
+      }
+    }
+    const contentOverTime = Array.from(dailyMap.entries()).map(([date, v]) => ({
+      date,
+      contentCreated: v.count,
+      avgViralScore: v.viralCount > 0 ? Math.round(v.viralSum / v.viralCount) : 0,
+    }));
+
+    // ---- Top performing content (real, ranked by viralScore) ----
+    const topContentRaw = await prisma.script.findMany({
+      where: { userId, viralScore: { not: null } },
+      orderBy: { viralScore: 'desc' },
+      take: 5,
+      select: {
+        id: true,
+        title: true,
+        type: true,
+        platform: true,
+        viralScore: true,
+        createdAt: true,
+      },
+    });
 
     return NextResponse.json({
       success: true,
-      metrics,
       range,
+      metrics: {
+        totalScripts,
+        totalScriptsChange: pctChange(totalScripts, prevScripts),
+        totalContentPlans,
+        totalContentPlansChange: pctChange(totalContentPlans, prevContentPlans),
+        avgViralScore,
+        avgViralScoreChange: pctChange(avgViralScore, prevAvgViralScore),
+        highViralCount,
+        highViralCountChange: pctChange(highViralCount, prevHighViralCount),
+        platforms,
+        contentTypes,
+        contentOverTime,
+        topContent: topContentRaw,
+      },
     });
   } catch (error) {
     console.error('Analytics overview error:', error);
@@ -97,26 +161,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-// Helper function to generate daily data
-function generateDailyData(range: string) {
-  const days = range === '7d' ? 7 : range === '30d' ? 30 : 90;
-  const data = [];
-  
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    
-    data.push({
-      date: date.toISOString().split('T')[0],
-      views: Math.floor(Math.random() * 10000) + 5000,
-      engagement: Math.floor(Math.random() * 500) + 100,
-      likes: Math.floor(Math.random() * 300) + 50,
-      comments: Math.floor(Math.random() * 50) + 10,
-      shares: Math.floor(Math.random() * 30) + 5,
-    });
-  }
-  
-  return data;
 }

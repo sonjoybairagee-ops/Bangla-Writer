@@ -4,157 +4,83 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  TrendingUp, 
-  Eye, 
-  Heart, 
-  Share2, 
+import {
+  TrendingUp,
+  Eye,
+  Heart,
   Users,
   BarChart3,
-  Calendar,
   Download,
   Target,
   Zap,
   ArrowUp,
   ArrowDown,
-  Filter,
 } from 'lucide-react';
-import { 
-  LineChart, 
-  Line, 
-  AreaChart, 
-  Area, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
-  Legend 
+  Legend,
 } from 'recharts';
 import { ContentPerformanceTracker } from '@/components/analytics/content-performance-tracker';
 import { ViralScorePredictor } from '@/components/analytics/viral-score-predictor';
 
+interface Metrics {
+  totalScripts: number;
+  totalScriptsChange: number;
+  totalContentPlans: number;
+  totalContentPlansChange: number;
+  avgViralScore: number;
+  avgViralScoreChange: number;
+  highViralCount: number;
+  highViralCountChange: number;
+  platforms: { name: string; count: number }[];
+  contentTypes: { type: string; count: number }[];
+  contentOverTime: { date: string; contentCreated: number; avgViralScore: number }[];
+  topContent: {
+    id: string;
+    title: string;
+    type: string;
+    platform: string;
+    viralScore: number | null;
+    createdAt: string;
+  }[];
+}
+
 export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d'>('30d');
-  const [metrics, setMetrics] = useState<any>(null);
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAnalytics();
   }, [dateRange]);
 
   const fetchAnalytics = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const response = await fetch(`/api/analytics/overview?range=${dateRange}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics');
+      }
       const data = await response.json();
-      
-      // Use real data if available, otherwise use realistic demo data
-      setMetrics(data.metrics || {
-        totalViews: 245800,
-        totalEngagement: 8.5,
-        totalFollowers: 42500,
-        avgViralScore: 76,
-        viewsChange: 12.5,
-        engagementChange: 5.2,
-        followersChange: 8.9,
-        viralScoreChange: 3.4,
-      });
-    } catch (error) {
-      console.error('Failed to fetch analytics:', error);
-      // Set realistic demo metrics on error
-      setMetrics({
-        totalViews: 245800,
-        totalEngagement: 8.5,
-        totalFollowers: 42500,
-        avgViralScore: 76,
-        viewsChange: 12.5,
-        engagementChange: 5.2,
-        followersChange: 8.9,
-        viralScoreChange: 3.4,
-      });
+      setMetrics(data.metrics);
+    } catch (err) {
+      console.error('Failed to fetch analytics:', err);
+      setError('অ্যানালিটিক্স ডেটা লোড করা যায়নি। আবার চেষ্টা করুন।');
+      setMetrics(null);
     } finally {
       setLoading(false);
     }
   };
-
-  // Generate realistic engagement data based on date range
-  const generateEngagementData = () => {
-    const days = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90;
-    const data = [];
-    
-    // Generate realistic data with growth pattern
-    const baseViews = 150;
-    const baseEngagement = 20;
-    const baseFollowers = 50;
-    
-    for (let i = days; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      
-      // Add realistic variation and growth trend
-      const dayProgress = (days - i) / days; // 0 to 1
-      const randomVariation = Math.random() * 0.4 + 0.8; // 0.8 to 1.2
-      const growthFactor = 1 + (dayProgress * 0.5); // 1x to 1.5x growth
-      
-      data.push({
-        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        views: Math.round(baseViews * growthFactor * randomVariation),
-        engagement: Math.round(baseEngagement * growthFactor * randomVariation),
-        followers: Math.round(baseFollowers * growthFactor * randomVariation * 0.5),
-      });
-    }
-    return data;
-  };
-
-  // Generate platform performance data
-  const platformData = [
-    { platform: 'Facebook', views: 12500, engagement: 850, color: '#1877f2' },
-    { platform: 'Instagram', views: 8900, engagement: 1200, color: '#e4405f' },
-    { platform: 'TikTok', views: 15300, engagement: 2100, color: '#000000' },
-    { platform: 'YouTube', views: 6700, engagement: 450, color: '#ff0000' },
-    { platform: 'LinkedIn', views: 3200, engagement: 280, color: '#0077b5' },
-  ];
-
-  // Generate content type performance data
-  const contentTypeData = [
-    { type: 'Short Video', count: 45, engagement: 85 },
-    { type: 'Long Post', count: 32, engagement: 65 },
-    { type: 'Image Post', count: 28, engagement: 58 },
-    { type: 'Story', count: 67, engagement: 42 },
-    { type: 'Reel', count: 38, engagement: 92 },
-  ];
-
-  // Generate top performing content
-  const topContent = [
-    {
-      title: '৫ মিনিটে ভাইরাল কন্টেন্ট তৈরির সহজ উপায়',
-      platform: 'Facebook',
-      views: 25000,
-      engagement: 2100,
-      viralScore: 92,
-      date: '2 days ago',
-    },
-    {
-      title: 'AI দিয়ে কিভাবে পেশাদার কন্টেন্ট তৈরি করবেন',
-      platform: 'Instagram',
-      views: 18500,
-      engagement: 1850,
-      viralScore: 88,
-      date: '3 days ago',
-    },
-    {
-      title: 'বাংলা কন্টেন্ট ক্রিয়েটরদের জন্য সেরা টুলস',
-      platform: 'TikTok',
-      views: 32000,
-      engagement: 3200,
-      viralScore: 95,
-      date: '5 days ago',
-    },
-  ];
-
-  const engagementData = generateEngagementData();
 
   if (loading) {
     return (
@@ -163,7 +89,7 @@ export default function AnalyticsPage() {
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-slate-200 rounded w-64"></div>
             <div className="grid grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map(i => (
+              {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="h-32 bg-slate-200 rounded"></div>
               ))}
             </div>
@@ -172,6 +98,20 @@ export default function AnalyticsPage() {
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <div className="max-w-7xl mx-auto text-center py-20">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={fetchAnalytics}>আবার চেষ্টা করুন</Button>
+        </div>
+      </div>
+    );
+  }
+
+  const m = metrics!;
+  const rangeLabel = dateRange === '7d' ? '7' : dateRange === '30d' ? '30' : '90';
 
   return (
     <div className="p-8">
@@ -189,25 +129,13 @@ export default function AnalyticsPage() {
           </div>
           <div className="flex gap-3">
             <div className="flex gap-2 bg-slate-100 p-1 rounded-lg">
-              <Button
-                variant={dateRange === '7d' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setDateRange('7d')}
-              >
+              <Button variant={dateRange === '7d' ? 'default' : 'ghost'} size="sm" onClick={() => setDateRange('7d')}>
                 7 Days
               </Button>
-              <Button
-                variant={dateRange === '30d' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setDateRange('30d')}
-              >
+              <Button variant={dateRange === '30d' ? 'default' : 'ghost'} size="sm" onClick={() => setDateRange('30d')}>
                 30 Days
               </Button>
-              <Button
-                variant={dateRange === '90d' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setDateRange('90d')}
-              >
+              <Button variant={dateRange === '90d' ? 'default' : 'ghost'} size="sm" onClick={() => setDateRange('90d')}>
                 90 Days
               </Button>
             </div>
@@ -220,73 +148,73 @@ export default function AnalyticsPage() {
 
         {/* Key Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Total Views */}
+          {/* Content Created */}
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-blue-50 rounded-lg">
                   <Eye className="h-6 w-6 text-blue-600" />
                 </div>
-                {metrics?.viewsChange !== 0 && (
-                  <Badge variant="secondary" className={metrics?.viewsChange > 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}>
-                    {metrics?.viewsChange > 0 ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
-                    {Math.abs(metrics?.viewsChange || 0).toFixed(1)}%
+                {m.totalScripts > 0 && (
+                  <Badge variant="secondary" className={m.totalScriptsChange >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}>
+                    {m.totalScriptsChange >= 0 ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
+                    {Math.abs(m.totalScriptsChange).toFixed(1)}%
                   </Badge>
                 )}
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Views</p>
-                <p className="text-3xl font-bold">{metrics?.totalViews?.toLocaleString() || '0'}</p>
+                <p className="text-sm text-muted-foreground mb-1">Content Created</p>
+                <p className="text-3xl font-bold">{m.totalScripts.toLocaleString()}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {metrics?.totalViews > 0 ? 'from last period' : 'No data yet'}
+                  {m.totalScripts > 0 ? 'from last period' : 'No content yet — start creating!'}
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Engagement Rate */}
+          {/* High-Viral Content */}
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-purple-50 rounded-lg">
                   <Heart className="h-6 w-6 text-purple-600" />
                 </div>
-                {metrics?.engagementChange !== 0 && (
-                  <Badge variant="secondary" className={metrics?.engagementChange > 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}>
-                    {metrics?.engagementChange > 0 ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
-                    {Math.abs(metrics?.engagementChange || 0).toFixed(1)}%
+                {m.highViralCount > 0 && (
+                  <Badge variant="secondary" className={m.highViralCountChange >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}>
+                    {m.highViralCountChange >= 0 ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
+                    {Math.abs(m.highViralCountChange).toFixed(1)}%
                   </Badge>
                 )}
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Engagement Rate</p>
-                <p className="text-3xl font-bold">{metrics?.totalEngagement?.toFixed(1) || '0'}%</p>
+                <p className="text-sm text-muted-foreground mb-1">High-Viral Content</p>
+                <p className="text-3xl font-bold">{m.highViralCount.toLocaleString()}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {metrics?.totalEngagement > 0 ? 'Average engagement' : 'No data yet'}
+                  {m.highViralCount > 0 ? 'Score 70+ this period' : 'No data yet'}
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Total Followers */}
+          {/* Content Plans */}
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-green-50 rounded-lg">
                   <Users className="h-6 w-6 text-green-600" />
                 </div>
-                {metrics?.followersChange !== 0 && (
-                  <Badge variant="secondary" className={metrics?.followersChange > 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}>
-                    {metrics?.followersChange > 0 ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
-                    {Math.abs(metrics?.followersChange || 0).toFixed(1)}%
+                {m.totalContentPlans > 0 && (
+                  <Badge variant="secondary" className={m.totalContentPlansChange >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}>
+                    {m.totalContentPlansChange >= 0 ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
+                    {Math.abs(m.totalContentPlansChange).toFixed(1)}%
                   </Badge>
                 )}
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Followers</p>
-                <p className="text-3xl font-bold">{metrics?.totalFollowers?.toLocaleString() || '0'}</p>
+                <p className="text-sm text-muted-foreground mb-1">Content Plans</p>
+                <p className="text-3xl font-bold">{m.totalContentPlans.toLocaleString()}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {metrics?.totalFollowers > 0 ? 'Total audience reach' : 'No data yet'}
+                  {m.totalContentPlans > 0 ? 'Active plans' : 'No data yet'}
                 </p>
               </div>
             </CardContent>
@@ -299,18 +227,18 @@ export default function AnalyticsPage() {
                 <div className="p-3 bg-orange-50 rounded-lg">
                   <Zap className="h-6 w-6 text-orange-600" />
                 </div>
-                {metrics?.viralScoreChange !== 0 && (
-                  <Badge variant="secondary" className={metrics?.viralScoreChange > 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}>
-                    {metrics?.viralScoreChange > 0 ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
-                    {Math.abs(metrics?.viralScoreChange || 0).toFixed(1)}%
+                {m.avgViralScore > 0 && (
+                  <Badge variant="secondary" className={m.avgViralScoreChange >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}>
+                    {m.avgViralScoreChange >= 0 ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
+                    {Math.abs(m.avgViralScoreChange).toFixed(1)}%
                   </Badge>
                 )}
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Avg Viral Score</p>
-                <p className="text-3xl font-bold">{metrics?.avgViralScore || '0'}/100</p>
+                <p className="text-3xl font-bold">{m.avgViralScore || 0}/100</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {metrics?.avgViralScore > 70 ? 'High viral potential' : metrics?.avgViralScore > 0 ? 'Moderate potential' : 'No data yet'}
+                  {m.avgViralScore > 70 ? 'High viral potential' : m.avgViralScore > 0 ? 'Moderate potential' : 'No data yet'}
                 </p>
               </div>
             </CardContent>
@@ -319,148 +247,114 @@ export default function AnalyticsPage() {
 
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Engagement Over Time */}
+          {/* Content Created Over Time */}
           <Card>
             <CardHeader>
-              <CardTitle>Engagement Over Time</CardTitle>
-              <CardDescription>
-                Daily engagement metrics for the last {dateRange === '7d' ? '7' : dateRange === '30d' ? '30' : '90'} days
-              </CardDescription>
+              <CardTitle>Content Created Over Time</CardTitle>
+              <CardDescription>Daily content creation for the last {rangeLabel} days</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={engagementData}>
-                  <defs>
-                    <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorEngagement" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="#94a3b8"
-                    fontSize={12}
-                    tickLine={false}
-                  />
-                  <YAxis 
-                    stroke="#94a3b8"
-                    fontSize={12}
-                    tickLine={false}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#fff', 
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                    }}
-                  />
-                  <Legend />
-                  <Area 
-                    type="monotone" 
-                    dataKey="views" 
-                    stroke="#8b5cf6" 
-                    fillOpacity={1} 
-                    fill="url(#colorViews)"
-                    name="Views"
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="engagement" 
-                    stroke="#06b6d4" 
-                    fillOpacity={1} 
-                    fill="url(#colorEngagement)"
-                    name="Engagement"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              {m.contentOverTime.every((d) => d.contentCreated === 0) ? (
+                <div className="h-[250px] flex items-center justify-center text-sm text-muted-foreground">
+                  এখনো কোনো কনটেন্ট তৈরি হয়নি
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={250}>
+                  <AreaChart data={m.contentOverTime}>
+                    <defs>
+                      <linearGradient id="colorCreated" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="colorViral" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} tickLine={false} />
+                    <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#fff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                      }}
+                    />
+                    <Legend />
+                    <Area type="monotone" dataKey="contentCreated" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorCreated)" name="Content Created" />
+                    <Area type="monotone" dataKey="avgViralScore" stroke="#06b6d4" fillOpacity={1} fill="url(#colorViral)" name="Avg Viral Score" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
 
           {/* Platform Performance */}
           <Card>
             <CardHeader>
-              <CardTitle>Platform Performance</CardTitle>
-              <CardDescription>
-                Compare performance across platforms
-              </CardDescription>
+              <CardTitle>Content by Platform</CardTitle>
+              <CardDescription>Where your content is created for</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={platformData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={true} vertical={false} />
-                  <XAxis type="number" stroke="#94a3b8" fontSize={12} tickLine={false} />
-                  <YAxis 
-                    type="category" 
-                    dataKey="platform" 
-                    stroke="#94a3b8" 
-                    fontSize={12} 
-                    tickLine={false}
-                    width={80}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#fff', 
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                    }}
-                  />
-                  <Legend />
-                  <Bar dataKey="views" fill="#8b5cf6" radius={[0, 8, 8, 0]} name="Views" />
-                  <Bar dataKey="engagement" fill="#06b6d4" radius={[0, 8, 8, 0]} name="Engagement" />
-                </BarChart>
-              </ResponsiveContainer>
+              {m.platforms.length === 0 ? (
+                <div className="h-[250px] flex items-center justify-center text-sm text-muted-foreground">
+                  এখনো কোনো প্ল্যাটফর্ম ডেটা নেই
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={m.platforms} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={true} vertical={false} />
+                    <XAxis type="number" stroke="#94a3b8" fontSize={12} tickLine={false} allowDecimals={false} />
+                    <YAxis type="category" dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} width={80} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#fff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                      }}
+                    />
+                    <Bar dataKey="count" fill="#8b5cf6" radius={[0, 8, 8, 0]} name="Content Count" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Content Performance & Quick Actions */}
+        {/* Content Type Performance & Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Content Type Performance */}
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>Content Type Performance</CardTitle>
-              <CardDescription>
-                Performance by content format
-              </CardDescription>
+              <CardTitle>Content Type Breakdown</CardTitle>
+              <CardDescription>Performance by content format</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={contentTypeData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis 
-                    dataKey="type" 
-                    stroke="#94a3b8"
-                    fontSize={12}
-                    tickLine={false}
-                    angle={-15}
-                    textAnchor="end"
-                    height={60}
-                  />
-                  <YAxis 
-                    stroke="#94a3b8"
-                    fontSize={12}
-                    tickLine={false}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#fff', 
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                    }}
-                  />
-                  <Legend />
-                  <Bar dataKey="count" fill="#8b5cf6" radius={[8, 8, 0, 0]} name="Posts Created" />
-                  <Bar dataKey="engagement" fill="#10b981" radius={[8, 8, 0, 0]} name="Avg Engagement %" />
-                </BarChart>
-              </ResponsiveContainer>
+              {m.contentTypes.length === 0 ? (
+                <div className="h-[300px] flex items-center justify-center text-sm text-muted-foreground">
+                  এখনো কোনো কনটেন্ট টাইপ ডেটা নেই
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={m.contentTypes}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis dataKey="type" stroke="#94a3b8" fontSize={12} tickLine={false} angle={-15} textAnchor="end" height={60} />
+                    <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} allowDecimals={false} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#fff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                      }}
+                    />
+                    <Bar dataKey="count" fill="#8b5cf6" radius={[8, 8, 0, 0]} name="Posts Created" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
 
@@ -468,9 +362,7 @@ export default function AnalyticsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>
-                Analyze and optimize
-              </CardDescription>
+              <CardDescription>Analyze and optimize</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -479,16 +371,8 @@ export default function AnalyticsPage() {
                   Predict Viral Score
                 </Button>
                 <Button variant="outline" className="w-full justify-start">
-                  <Users className="mr-2 h-4 w-4" />
-                  Audience Insights
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
                   <TrendingUp className="mr-2 h-4 w-4" />
                   Trend Detection
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  Competitor Analysis
                 </Button>
                 <Button variant="outline" className="w-full justify-start">
                   <Download className="mr-2 h-4 w-4" />
@@ -503,51 +387,50 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Top Performing Content</CardTitle>
-            <CardDescription>
-              Your best performing content this month
-            </CardDescription>
+            <CardDescription>Your highest viral-score content</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {topContent.map((content, index) => (
-                <div 
-                  key={index}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-sm">{content.title}</h4>
-                      <Badge variant="outline" className="text-xs">
-                        {content.platform}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Eye className="h-3 w-3" />
-                        {content.views.toLocaleString()} views
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Heart className="h-3 w-3" />
-                        {content.engagement.toLocaleString()} engagements
-                      </span>
-                      <span>{content.date}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <div className="text-xs text-muted-foreground mb-1">Viral Score</div>
-                      <div className="flex items-center gap-1">
-                        <div className="text-lg font-bold text-purple-600">{content.viralScore}</div>
-                        <Zap className="h-4 w-4 text-orange-500" />
+            {m.topContent.length === 0 ? (
+              <div className="py-12 text-center text-sm text-muted-foreground">
+                এখনো কোনো কনটেন্ট নেই। প্রথমে কিছু script/hook তৈরি করুন।
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {m.topContent.map((content) => (
+                  <div
+                    key={content.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-semibold text-sm">{content.title}</h4>
+                        <Badge variant="outline" className="text-xs">
+                          {content.platform}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {content.type}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <span>{new Date(content.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg flex items-center justify-center">
-                      <TrendingUp className="h-8 w-8 text-purple-600" />
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <div className="text-xs text-muted-foreground mb-1">Viral Score</div>
+                        <div className="flex items-center gap-1">
+                          <div className="text-lg font-bold text-purple-600">{content.viralScore ?? '—'}</div>
+                          <Zap className="h-4 w-4 text-orange-500" />
+                        </div>
+                      </div>
+                      <div className="w-16 h-16 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg flex items-center justify-center">
+                        <TrendingUp className="h-8 w-8 text-purple-600" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

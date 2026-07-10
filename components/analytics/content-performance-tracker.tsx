@@ -6,49 +6,55 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
-  Eye,
-  Heart,
-  Share2,
-  MessageCircle,
-  Bookmark,
-  MousePointer,
+  Zap,
   TrendingUp,
-  Filter,
   Search,
   Calendar,
   ExternalLink,
 } from 'lucide-react';
 
+interface ContentItem {
+  id: string;
+  title: string;
+  type: string;
+  platform: string;
+  viralScore: number | null;
+  date: string;
+}
+
 export function ContentPerformanceTracker() {
-  const [content, setContent] = useState<any[]>([]);
+  const [content, setContent] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'reel' | 'post' | 'story' | 'carousel'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'views' | 'engagement' | 'date'>('views');
+  const [sortBy, setSortBy] = useState<'viralScore' | 'date'>('viralScore');
 
   useEffect(() => {
     fetchContentPerformance();
   }, [filter, sortBy]);
 
   const fetchContentPerformance = async () => {
+    setLoading(true);
     try {
       const response = await fetch(`/api/analytics/content-performance?filter=${filter}&sort=${sortBy}`);
       const data = await response.json();
       setContent(data.content || []);
     } catch (error) {
       console.error('Failed to fetch content performance:', error);
+      setContent([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredContent = content.filter(item =>
+  const filteredContent = content.filter((item) =>
     item.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getEngagementColor = (rate: number) => {
-    if (rate >= 5) return 'text-green-600 bg-green-50';
-    if (rate >= 3) return 'text-yellow-600 bg-yellow-50';
+  const getViralScoreColor = (score: number | null) => {
+    if (score == null) return 'text-slate-500 bg-slate-50';
+    if (score >= 70) return 'text-green-600 bg-green-50';
+    if (score >= 40) return 'text-yellow-600 bg-yellow-50';
     return 'text-red-600 bg-red-50';
   };
 
@@ -61,9 +67,7 @@ export function ContentPerformanceTracker() {
               <TrendingUp className="h-5 w-5 text-purple-600" />
               Content Performance Tracking
             </CardTitle>
-            <CardDescription>
-              Track individual content performance metrics
-            </CardDescription>
+            <CardDescription>Track individual content performance metrics</CardDescription>
           </div>
           <Button variant="outline">
             <ExternalLink className="mr-2 h-4 w-4" />
@@ -84,32 +88,16 @@ export function ContentPerformanceTracker() {
             />
           </div>
           <div className="flex gap-2">
-            <Button
-              variant={filter === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('all')}
-            >
+            <Button variant={filter === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('all')}>
               All
             </Button>
-            <Button
-              variant={filter === 'reel' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('reel')}
-            >
+            <Button variant={filter === 'reel' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('reel')}>
               Reels
             </Button>
-            <Button
-              variant={filter === 'post' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('post')}
-            >
+            <Button variant={filter === 'post' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('post')}>
               Posts
             </Button>
-            <Button
-              variant={filter === 'carousel' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('carousel')}
-            >
+            <Button variant={filter === 'carousel' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('carousel')}>
               Carousels
             </Button>
           </div>
@@ -118,8 +106,7 @@ export function ContentPerformanceTracker() {
             onChange={(e) => setSortBy(e.target.value as any)}
             className="px-3 py-2 border rounded-md text-sm"
           >
-            <option value="views">Sort by Views</option>
-            <option value="engagement">Sort by Engagement</option>
+            <option value="viralScore">Sort by Viral Score</option>
             <option value="date">Sort by Date</option>
           </select>
         </div>
@@ -127,18 +114,15 @@ export function ContentPerformanceTracker() {
         {/* Content List */}
         {loading ? (
           <div className="space-y-3">
-            {[1, 2, 3].map(i => (
+            {[1, 2, 3].map((i) => (
               <div key={i} className="h-24 bg-slate-100 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : (
           <div className="space-y-3">
             {filteredContent.map((item) => (
-              <div
-                key={item.id}
-                className="p-4 border rounded-lg hover:shadow-md transition-shadow bg-white"
-              >
-                <div className="flex items-start justify-between mb-3">
+              <div key={item.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow bg-white">
+                <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-semibold">{item.title}</h4>
@@ -158,94 +142,10 @@ export function ContentPerformanceTracker() {
                       })}
                     </p>
                   </div>
-                  <Badge
-                    className={`${getEngagementColor(item.engagementRate)} border-0`}
-                  >
-                    {item.engagementRate}% Engagement
+                  <Badge className={`${getViralScoreColor(item.viralScore)} border-0 flex items-center gap-1`}>
+                    <Zap className="h-3 w-3" />
+                    {item.viralScore != null ? `${item.viralScore}/100` : 'Not scored'}
                   </Badge>
-                </div>
-
-                {/* Metrics Grid */}
-                <div className="grid grid-cols-6 gap-4">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-blue-600 mb-1">
-                      <Eye className="h-4 w-4" />
-                      <span className="text-sm font-semibold">
-                        {item.views.toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Views</p>
-                  </div>
-
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-red-600 mb-1">
-                      <Heart className="h-4 w-4" />
-                      <span className="text-sm font-semibold">
-                        {item.likes.toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Likes</p>
-                  </div>
-
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-green-600 mb-1">
-                      <MessageCircle className="h-4 w-4" />
-                      <span className="text-sm font-semibold">
-                        {item.comments.toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Comments</p>
-                  </div>
-
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-purple-600 mb-1">
-                      <Share2 className="h-4 w-4" />
-                      <span className="text-sm font-semibold">
-                        {item.shares.toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Shares</p>
-                  </div>
-
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-orange-600 mb-1">
-                      <Bookmark className="h-4 w-4" />
-                      <span className="text-sm font-semibold">
-                        {item.saves.toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Saves</p>
-                  </div>
-
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-indigo-600 mb-1">
-                      <MousePointer className="h-4 w-4" />
-                      <span className="text-sm font-semibold">
-                        {item.clicks.toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Clicks</p>
-                  </div>
-                </div>
-
-                {/* Reach & Impressions */}
-                <div className="mt-3 pt-3 border-t flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-4">
-                    <span className="text-muted-foreground">
-                      Reach: <span className="font-semibold text-foreground">{item.reach.toLocaleString()}</span>
-                    </span>
-                    <span className="text-muted-foreground">
-                      Impressions: <span className="font-semibold text-foreground">{item.impressions.toLocaleString()}</span>
-                    </span>
-                    {item.conversions && (
-                      <span className="text-muted-foreground">
-                        Conversions: <span className="font-semibold text-green-600">{item.conversions}</span>
-                      </span>
-                    )}
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    View Details
-                  </Button>
                 </div>
               </div>
             ))}
