@@ -16,6 +16,7 @@ const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   referralCode: z.string().optional(),
+  deviceFingerprint: z.string().optional(), // Device fingerprint from client
   // Kept as free-form strings on purpose: this is just a UX nicety (which plan
   // to nudge the user toward after signup). An invalid/garbage value here
   // should never block account creation, so we validate against the known
@@ -35,8 +36,9 @@ export async function POST(req: NextRequest) {
     // 🛡️ ABUSE DETECTION
     const clientIP = getClientIP(req);
     const userAgent = req.headers.get('user-agent') || undefined;
+    const deviceFingerprint = body.deviceFingerprint; // Sent from client
     
-    const abuseCheck = await performAbuseCheck(email, clientIP, userAgent);
+    const abuseCheck = await performAbuseCheck(email, clientIP, userAgent, deviceFingerprint);
     
     if (abuseCheck.isAbuse) {
       // Log suspicious activity

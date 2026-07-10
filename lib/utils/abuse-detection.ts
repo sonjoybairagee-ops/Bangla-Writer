@@ -10,6 +10,110 @@ interface AbuseCheckResult {
   reason?: string;
   riskLevel: 'low' | 'medium' | 'high';
   existingAccounts?: number;
+  deviceFingerprint?: string;
+}
+
+/**
+ * Check device fingerprint for abuse
+ */
+export async function checkDeviceFingerprintAbuse(
+  fingerprint: string,
+  email: string,
+  ipAddress: string
+): Promise<AbuseCheckResult> {
+  if (!fingerprint) {
+    return { isAbuse: false, riskLevel: 'low' };
+  }
+
+  // Check if this device fingerprint exists
+  const existingDevice = await prisma.deviceFingerprint.findUnique({
+    where: { fingerprint },
+  });
+
+  if (!existingDevice) {
+    // New device - create record
+    await prisma.deviceFingerprint.create({
+      data: {
+        fingerprint,
+        firstSeenIp: ipAddress,
+        firstSeenEmail: email,
+        userIds: [],
+        emailAddresses: [email],
+        ipAddresses: [ipAddress],
+        signupCount: 1,
+        riskLevel: 'low',
+      },
+    });
+    return { isAbuse: false, riskLevel: 'low', deviceFingerprint: fingerprint };
+  }
+
+  // Check if device is already blocked
+  if (existingDevice.isBlocked) {
+    return {
+      isAbuse: true,
+      reason: existingDevice.blockedReason || 'This device has been blocked due to suspicious activity',
+      riskLevel: 'high',
+      deviceFingerprint: fingerprint,
+    };
+  }
+
+  // Check signup count from this device
+  const signupCount = existingDevice.signupCount + 1;
+
+  // Update device record
+  await prisma.deviceFingerprint.update({
+    where: { fingerprint },
+    data: {
+      signupCount,
+      lastSeenAt: new Date(),
+      emailAddresses: {
+        set: [...new Set([...existingDevice.emailAddresses, email])],
+      },
+      ipAddresses: {
+        set: [...new Set([...existingDevice.ipAddresses, ipAddress])],
+      },
+      riskLevel:
+        signupCount >= 5
+          ? 'high'
+          : signupCount >= 3
+          ? 'medium'
+          : 'low',
+      isBlocked: signupCount >= 5,
+      blockedAt: signupCount >= 5 ? new Date() : existingDevice.blockedAt,
+      blockedReason:
+        signupCount >= 5
+          ? `Too many trial accounts from this device (${signupCount})`
+          : existingDevice.blockedReason,
+    },
+  });
+
+  // Block if 5+ signups
+  if (signupCount >= 5) {
+    return {
+      isAbuse: true,
+      reason: `This device has been used for ${signupCount} trial signups. Please contact support if this is a mistake.`,
+      riskLevel: 'high',
+      existingAccounts: signupCount,
+      deviceFingerprint: fingerprint,
+    };
+  }
+
+  // Flag if 3-4 signups
+  if (signupCount >= 3) {
+    return {
+      isAbuse: false,
+      reason: `Multiple signups detected from this device (${signupCount})`,
+      riskLevel: 'medium',
+      existingAccounts: signupCount,
+      deviceFingerprint: fingerprint,
+    };
+  }
+
+  return {
+    isAbuse: false,
+    riskLevel: 'low',
+    deviceFingerprint: fingerprint,
+  };
 }
 
 /**
@@ -141,50 +245,67 @@ export async function checkEmailDuplicate(email: string): Promise<boolean> {
 }
 
 /**
- * Comprehensive abuse check
+ * Comprehensive abuse check with device fingerprinting
  */
 export async function performAbuseCheck(
   email: string,
   ipAddress: string,
-  userAgent?: string
+  userAgent?: string,
+  deviceFingerprint?: string
 ): Promise<AbuseCheckResult> {
-  // Check 1: Disposable email
+  // Check 1: Device fingerprint (if provided)
+  if (deviceFingerprint) {
+    const deviceCheck = await checkDeviceFingerprintAbuse(
+      deviceFingerprint,
+      email,
+      ipAddress
+    );
+    if (deviceCheck.isAbuse) {
+      return deviceCheck;
+    }
+  }
+
+  // Check 2: Disposable email
   if (isDisposableEmail(email)) {
     return {
       isAbuse: true,
       reason: 'Temporary email addresses are not allowed',
       riskLevel: 'high',
+      deviceFingerprint,
     };
   }
 
-  // Check 2: Email duplicate (normalized)
+  // Check 3: Email duplicate (normalized)
   const hasDuplicate = await checkEmailDuplicate(email);
   if (hasDuplicate) {
     return {
       isAbuse: true,
       reason: 'This email is already registered (detected variant)',
       riskLevel: 'high',
+      deviceFingerprint,
     };
   }
 
-  // Check 3: IP abuse
+  // Check 4: IP abuse
   const ipCheck = await checkIPAbuse(ipAddress);
   if (ipCheck.isAbuse) {
-    return ipCheck;
+    return { ...ipCheck, deviceFingerprint };
   }
 
-  // Check 4: Warning for plus addressing (not blocking, just flagging)
+  // Check 5: Warning for plus addressing (not blocking, just flagging)
   if (detectPlusAddressing(email)) {
     return {
       isAbuse: false,
       reason: 'Plus addressing detected',
       riskLevel: 'medium',
+      deviceFingerprint,
     };
   }
 
   return {
     isAbuse: false,
     riskLevel: ipCheck.riskLevel,
+    deviceFingerprint,
   };
 }
 

@@ -612,3 +612,45 @@ model Referral {
 }
 
 
+
+// Device Fingerprinting (Trial Abuse Prevention)
+model DeviceFingerprint {
+  id          String   @id @default(cuid())
+  fingerprint String   @unique // Browser fingerprint ID
+  
+  // First seen
+  firstSeenIp       String?
+  firstSeenEmail    String?
+  firstSeenAt       DateTime @default(now())
+  
+  // Associated users (for detecting multiple accounts)
+  userIds      String[] // Array of user IDs from this device
+  emailAddresses String[] // All emails used from this device
+  ipAddresses    String[] // All IPs seen with this device
+  
+  // Metadata
+  userAgent    String?
+  browser      String?
+  os           String?
+  device       String?
+  screenSize   String?
+  timezone     String?
+  language     String?
+  
+  // Risk assessment
+  riskLevel    String @default("low") // low, medium, high
+  isBlocked    Boolean @default(false)
+  blockedAt    DateTime?
+  blockedReason String?
+  
+  // Tracking
+  signupCount  Int @default(0) // How many signups from this device
+  lastSeenAt   DateTime @default(now())
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([fingerprint])
+  @@index([riskLevel])
+  @@index([isBlocked])
+}

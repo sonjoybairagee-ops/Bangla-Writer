@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sparkles, Eye, EyeOff, Rocket, Award, Clock, Heart, Check, Shield, ArrowLeft } from 'lucide-react';
 import { PRICING_PLANS } from '@/lib/constants/pricing';
+import { getDeviceFingerprint } from '@/lib/hooks/use-device-fingerprint';
 
 function RegisterForm() {
   const router = useRouter();
@@ -31,6 +32,9 @@ function RegisterForm() {
     setLoading(true);
 
     try {
+      // Get device fingerprint
+      const deviceFingerprint = await getDeviceFingerprint();
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -39,6 +43,7 @@ function RegisterForm() {
           email, 
           password,
           referralCode: referralCode || undefined,
+          deviceFingerprint: deviceFingerprint || undefined,
           intendedPlan: urlPlan || undefined,
           intendedBilling: urlPlan ? urlBilling : undefined,
         }),

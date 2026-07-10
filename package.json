@@ -16,6 +16,7 @@
     "@ai-sdk/openai": "^0.0.66",
     "@anthropic-ai/sdk": "^0.110.0",
     "@auth/prisma-adapter": "^2.7.4",
+    "@fingerprintjs/fingerprintjs": "^5.2.0",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.9.1",
     "@prisma/client": "^6.1.0",
