@@ -53,14 +53,14 @@ Make sure these are set:
 ```bash
 DATABASE_URL=postgresql://neondb_owner:npg_eu3K0ZgpPOmT@ep-proud-credit-aoqoho0b-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 
-NEXTAUTH_URL=https://banglacreatortai.vercel.app
+NEXTAUTH_URL=https://bangla-creator.vercel.app
 NEXTAUTH_SECRET=Kxj9mP3nQ8rW5tYv2bN4cM7zL0sA6hD1fG8eR3jT5iU9oP2wX4qV6kB7yC0mL8nH
 
 OPENAI_API_KEY=sk-proj-YOUR_OPENAI_API_KEY
 
 GROQ_API_KEY=gsk_YOUR_GROQ_API_KEY
 
-NEXT_PUBLIC_APP_URL=https://banglacreatortai.vercel.app
+NEXT_PUBLIC_APP_URL=https://bangla-creator.vercel.app
 NEXT_PUBLIC_APP_NAME=Bangla Creator
 
 RESEND_API_KEY=re_FjDTcDmx_DZAH3uXi7CK6rfFcf1dhyBdF

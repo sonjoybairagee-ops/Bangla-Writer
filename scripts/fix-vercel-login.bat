@@ -16,7 +16,7 @@ echo 📝 Setting environment variables on Vercel...
 echo.
 echo ⚠️ You'll need to enter these values manually:
 echo.
-echo 1. NEXTAUTH_URL = https://banglacreatortai.vercel.app
+echo 1. NEXTAUTH_URL = https://bangla-creator.vercel.app
 echo 2. NEXTAUTH_SECRET = Kxj9mP3nQ8rW5tYv2bN4cM7zL0sA6hD1fG8eR3jT5iU9oP2wX4qV6kB7yC0mL8nH
 echo.
 echo Press any key to continue...
@@ -33,6 +33,6 @@ vercel --prod
 
 echo.
 echo ✨ Done! Wait 1-2 minutes for deployment to complete.
-echo 🌐 Then try logging in at: https://banglacreatortai.vercel.app/login
+echo 🌐 Then try logging in at: https://bangla-creator.vercel.app/login
 echo.
 pause
