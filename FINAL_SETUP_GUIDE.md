@@ -52,7 +52,7 @@
    ```
    Key: DATABASE_URL
    
-   Value: postgresql://neondb_owner:npg_6eI1EcUbJOKu@ep-proud-credit-aoqoho0b-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+   Value: postgresql://neondb_owner:YOUR_PASSWORD_HERE@ep-proud-credit-aoqoho0b-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
    
    Environment:
    ☑ Production
@@ -110,7 +110,7 @@ vercel login
 
 # Set DATABASE_URL
 vercel env add DATABASE_URL production
-# Paste: postgresql://neondb_owner:npg_6eI1EcUbJOKu@ep-proud-credit-aoqoho0b-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+# Paste: postgresql://neondb_owner:YOUR_PASSWORD_HERE@ep-proud-credit-aoqoho0b-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 
 # Set NEXTAUTH_URL
 vercel env add NEXTAUTH_URL production
