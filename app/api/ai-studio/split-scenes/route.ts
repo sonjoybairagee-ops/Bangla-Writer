@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { generateText } from '@/lib/ai/openai';
+import { generateJSON } from '@/lib/ai/openai';
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,20 +40,11 @@ Rules:
 
 Return ONLY valid JSON, no markdown, no explanation.`;
 
-    const response = await generateText(prompt, {
-      temperature: 0.3,
-      maxTokens: 2000,
-    });
-
-    // Parse JSON from response
     let scenes;
     try {
-      const jsonMatch = response.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        scenes = JSON.parse(jsonMatch[0]);
-      } else {
-        scenes = JSON.parse(response);
-      }
+      scenes = await generateJSON(prompt, {
+        temperature: 0.3,
+      });
     } catch (e) {
       console.error('Failed to parse scenes:', e);
       return NextResponse.json({ error: 'Failed to parse AI response' }, { status: 500 });
