@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
         amount,
         currency: 'BDT',
         paymentGateway: 'manual',
-        paymentMethod: 'admin_assigned',
+        method: 'admin_assigned',
         status: 'success',
         paidAt: now,
       },
